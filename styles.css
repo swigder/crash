@@ -1,0 +1,32 @@
+html, body {
+    height: 100%;
+    margin-left: 5%;
+    margin-right: 5%;
+    font-family: "Lucinda Grande", "Lucinda Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+}
+
+#map {
+    width: 80%;
+    height: 80%;
+}
+
+.circle {
+    border-radius: 50%;
+    text-align: center;
+}
+
+.bike {
+    background: rgba(50, 168, 68, 0.7);
+}
+
+.car {
+    background: rgba(168, 166, 50, 0.7);
+}
+
+.ped {
+    background: rgba(168, 50, 50, 0.7);
+}
+
+.other {
+    background: rgba(0, 0, 0, 0.7);
+}
