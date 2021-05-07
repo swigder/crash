@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
           integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
           crossorigin=""/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
 
     <link rel="stylesheet" href="styles.css"/>
 
@@ -23,9 +24,45 @@
 
 <body>
 
-<h1>Traffic fatalities - PG County</h1>
+<section class="section">
+    <div class="container">
+        <h1 class="title">
+            Traffic fatalities - PG County
+        </h1>
+    </div>
+</section>
 
-<div id="map"></div>
+<div class="columns">
+    <div id="map" class="column is-three-quarters"></div>
+    <div class="column" x-data="{detail: null}" x-on:items-load.window="detail = $event.detail">
+        <template x-if="detail">
+            <table class="table">
+                <tbody>
+                <tr>
+                    <th class="has-text-right">Case</th>
+                    <td x-text="detail.case_id"></td>
+                </tr>
+                <tr>
+                    <th class="has-text-right">Year</th>
+                    <td x-text="detail.year"></td>
+                </tr>
+                <tr>
+                    <th class="has-text-right">Injuries</th>
+                    <td>
+                        <template x-for="injury in detail.injuries" :key="injury">
+                            <dl><span x-text="injury.person"></span> - <span x-text="injury.severity"></span></dl>
+                        </template>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="has-text-right">Vehicles</th>
+                    <td x-text="detail.num_vehicles"></td>
+                </tr>
+                </tbody>
+            </table>
+        </template>
+    </div>
+</div>
 
 <script src="script.js"></script>
 

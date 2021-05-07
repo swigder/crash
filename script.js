@@ -24,7 +24,11 @@ $.getJSON('geojson.json', function (data) {
 
         onEachFeature: function (feature, layer) {
             // layer.bindPopup(feature.properties.year);
-            layer.bindPopup(feature.properties.year);
+            layer.on('click', function (e) {
+                window.dispatchEvent(new CustomEvent("items-load", {
+                    detail: e.sourceTarget.feature.properties
+                }));
+            })
         },
 
         pointToLayer: function (feature, latlng) {

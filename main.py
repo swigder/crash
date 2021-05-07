@@ -34,18 +34,13 @@ def query_crash_api(api, params, cache=True):
 
 def convert_to_geojson(df):
     features = []
-    harm_to_symbol = {
-        'Motor Vehicle In-Transport': 'car',
-        'Parked Motor Vehicle': 'car',
-        'Pedalcyclist': 'bike',
-        'Pedestrian': 'ped'
-    }
     for index, row in df.iterrows():
-        harm = row['Harm'].strip()
         features.append(geojson.Feature(geometry=geojson.Point((row['LONGITUD'], row['LATITUDE'])), properties={
             'year': row['CaseYear'],
             'case_id': row['ST_CASE'],
-            'harm': harm_to_symbol[harm] if harm in harm_to_symbol else 'other',
+            'harm': get_category(row['People']),
+            'injuries': list_injuries(row['People']),
+            'num_vehicles': len(row['Vehicles']),
         }))
     return geojson.FeatureCollection(features=features)
 
@@ -57,6 +52,32 @@ def get_people(crash_result_set):
     return people
 
 
+def get_category(people):
+    per_typ_to_category = {v: k for k, values in {
+        'car': [1, 2, 3, 4],
+        'ped': [5, 8],
+        'bike': [6],
+        'other': [9, 10, 11],
+    }.items() for v in values}
+
+    max_category = 0
+    max_inj_sev = 0
+    for p in people:
+        inj_sev = int(p['INJ_SEV'])
+        category = int(p['PER_TYP'])
+        if (inj_sev > max_inj_sev) or (inj_sev == max_inj_sev and category > max_category):
+            max_category = category
+            max_inj_sev = inj_sev
+    return per_typ_to_category[max_category]
+
+
+def list_injuries(people):
+    injuries = []
+    for p in people:
+        injuries.append({'severity': p['INJ_SEVNAME'], 'person': p['PER_TYPNAME'].split()[0]})
+    return injuries
+
+
 def get_crashes_list(year_range=(2015, 2019), state_id=24, county_id=33):
     response = query_crash_api(api='GetCrashesByLocation',
                                params={'state': state_id, 'county': county_id, 'fromCaseYear': year_range[0],
@@ -65,26 +86,15 @@ def get_crashes_list(year_range=(2015, 2019), state_id=24, county_id=33):
     df = pd.DataFrame(response['Results'][0])
     df[["LONGITUD", "LATITUDE"]] = df[["LONGITUD", "LATITUDE"]].apply(pd.to_numeric)
 
-    bbox = (-76.9862, -76.7740, 39.0560, 38.9376)
-
-    # df = df[(bbox[0] < df["LONGITUD"]) & (df["LONGITUD"] < bbox[1]) & (bbox[3] < df["LATITUDE"]) & (
-    #         df["LATITUDE"] < bbox[2])]
-
-    harm_column = 'Harm'
-    metadata_column = 'Metadata'
-    filter_column = 'Filter'
-    df.insert(2, harm_column, value='')
-    metadata = pd.DataFrame()
+    people_column = 'People'
+    vehicles_column = 'Vehicles'
+    df.insert(2, people_column, value='')
     for index, row in df.iterrows():
         response = query_crash_api(api='GetCaseDetails',
                                    params={'stateCase': row['ST_CASE'], 'caseYear': row['CaseYear'], 'state': state_id})
         crash_result_set = response['Results'][0][0]['CrashResultSet']
-        df.at[index, metadata_column] = response['Results'][0][0]
-        df.at[index, harm_column] = crash_result_set['HARM_EVNAME']
-        df.at[index, filter_column] = any([int(p['INJ_SEV']) >= 4 for p in get_people(crash_result_set)])
-        metadata.append(response['Results'][0][0]['CrashResultSet'], ignore_index=True)
-
-    df = df[df['Filter']]
+        df.at[index, people_column] = get_people(crash_result_set)
+        df.at[index, vehicles_column] = crash_result_set['Vehicles']
 
     with open('geojson.json', 'w') as outfile:
         json.dump(convert_to_geojson(df), outfile)
