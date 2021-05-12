@@ -5,9 +5,9 @@ html, body {
     font-family: "Lucinda Grande", "Lucinda Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
 }
 
-.columns {
+#main {
     display: flex;
-    height: 80vh;
+    height: 75vh;
 }
 
 #map {

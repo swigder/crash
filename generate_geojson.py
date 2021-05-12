@@ -12,7 +12,7 @@ def get_category(people):
     max_category = 0
     max_inj_sev = 0
     for p in people:
-        inj_sev = int(p['INJ_SEV'])
+        inj_sev = max(int(p['INJ_SEV']), 4)
         category = int(p['PER_TYP'])
         if (inj_sev > max_inj_sev) or (inj_sev == max_inj_sev and category > max_category):
             max_category = category
