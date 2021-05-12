@@ -16,8 +16,10 @@ const emojis = {
     'other': ''
 }
 
+let geojsonLayer = null
+
 $.getJSON('geojson.json', function (data) {
-    L.geoJSON(data, {
+    geojsonLayer = L.geoJSON(data, {
         style: function (feature) {
             return feature.properties && feature.properties.style;
         },
@@ -43,5 +45,30 @@ $.getJSON('geojson.json', function (data) {
                 })
             });
         }
-    }).addTo(map);
+    });
+    geojsonLayer.addTo(map);
+
+    updateCount();
 });
+
+map.on('zoomend', updateCount);
+map.on('moveend', updateCount);
+
+function getCounts() {
+    let crash_count = 0
+    let fatality_count = 0
+    for (const property in geojsonLayer._layers) {
+        l = geojsonLayer._layers[property]
+        if (l instanceof L.Marker && map.getBounds().contains(l.getLatLng())) {
+            crash_count++
+            fatality_count += l.feature.properties.num_fatalities
+        }
+    }
+    return {crash_count: crash_count, fatality_count: fatality_count};
+}
+
+function updateCount() {
+    window.dispatchEvent(new CustomEvent("count-updated", {
+        detail: getCounts()
+    }));
+}

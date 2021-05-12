@@ -27,6 +27,14 @@ def get_injuries(people):
     return injuries
 
 
+def get_num_fatalities(people):
+    num_fatalities = 0
+    for p in people:
+        if int(p['INJ_SEV']) >= 4:
+            num_fatalities += 1
+    return num_fatalities
+
+
 def convert_to_geojson(df):
     features = []
     for index, row in df.iterrows():
@@ -36,5 +44,6 @@ def convert_to_geojson(df):
             'harm': get_category(row['People']),
             'injuries': get_injuries(row['People']),
             'num_vehicles': len(row['Vehicles']),
+            'num_fatalities': get_num_fatalities(row['People']),
         }))
     return geojson.FeatureCollection(features=features)

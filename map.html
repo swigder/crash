@@ -64,6 +64,19 @@
     </div>
 </div>
 
+<div class="column" x-data="{detail: null}" x-on:count-updated.window="detail = $event.detail">
+    <table class="table">
+        <tbody>
+        <tr>
+            <th class="has-text-right">Crashes</th>
+            <td x-text="detail.crash_count"></td>
+            <th class="has-text-right">Fatalities</th>
+            <td x-text="detail.fatality_count"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
 <script src="script.js"></script>
 
 </body>
