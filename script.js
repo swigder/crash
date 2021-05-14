@@ -69,7 +69,6 @@ function getNewData() {
             for (let year = 2015; year < 2020; year++) {
                 let file = `geojson/geojson-${year}-${lat}_${long}.json`
                 if (!loaded.has(file)) {
-                    console.log(file)
                     $.getJSON(file, function (data) {
                         geojsonLayer.addData(data)
                     });
