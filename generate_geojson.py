@@ -5,8 +5,8 @@ def get_category(people):
     per_typ_to_category = {v: k for k, values in {
         'car': [1, 2, 3, 4],
         'ped': [5, 8],
-        'bike': [6],
-        'other': [9, 10, 11],
+        'bike': [6, 7],
+        'other': [9, 10, 19],
     }.items() for v in values}
 
     max_category = 0
@@ -39,11 +39,11 @@ def convert_to_geojson(df):
     features = []
     for index, row in df.iterrows():
         features.append(geojson.Feature(geometry=geojson.Point((row['LONGITUD'], row['LATITUDE'])), properties={
-            'year': row['CaseYear'],
+            'year': row['CASEYEAR'],
             'case_id': row['ST_CASE'],
-            'harm': get_category(row['People']),
-            'injuries': get_injuries(row['People']),
-            'num_vehicles': len(row['Vehicles']),
-            'num_fatalities': get_num_fatalities(row['People']),
+            'harm': get_category(row['Person']),
+            'injuries': get_injuries(row['Person']),
+            'num_vehicles': row['Vehicle'],
+            'num_fatalities': get_num_fatalities(row['Person']),
         }))
     return geojson.FeatureCollection(features=features)

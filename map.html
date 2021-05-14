@@ -10,6 +10,9 @@
           crossorigin=""/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+
     <link rel="stylesheet" href="styles.css"/>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -18,6 +21,7 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
             integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <title>Traffic fatalities - PG County</title>
 </head>
@@ -65,7 +69,8 @@
 </div>
 
 <div class="columns">
-    <div class="column" x-data="{detail: null}" x-on:count-updated.window="detail = $event.detail">
+    <div class="column" x-data="{detail: {crash_count: 0, fatality_count: 0}}"
+         x-on:count-updated.window="detail = $event.detail">
         <table class="table">
             <tbody>
             <tr>

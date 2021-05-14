@@ -1,4 +1,7 @@
-let map = L.map('map').setView([39.00, -76.88], 13);
+const loaded = new Set()
+
+let map = L.map('map')
+map.on('moveend zoomend load', getNewData);
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -16,43 +19,69 @@ const emojis = {
     'other': ''
 }
 
-let geojsonLayer = null
+let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
+    style: function (feature) {
+        return feature.properties && feature.properties.style;
+    },
 
-$.getJSON('geojson.json', function (data) {
-    geojsonLayer = L.geoJSON(data, {
-        style: function (feature) {
-            return feature.properties && feature.properties.style;
-        },
+    onEachFeature: function (feature, layer) {
+        // layer.bindPopup(feature.properties.year);
+        layer.on('click', function (e) {
+            window.dispatchEvent(new CustomEvent("items-load", {
+                detail: e.sourceTarget.feature.properties
+            }));
+        })
+    },
 
-        onEachFeature: function (feature, layer) {
-            // layer.bindPopup(feature.properties.year);
-            layer.on('click', function (e) {
-                window.dispatchEvent(new CustomEvent("items-load", {
-                    detail: e.sourceTarget.feature.properties
-                }));
+    pointToLayer: function (feature, latlng) {
+        const size = 20
+        let harm = feature.properties.harm
+        return L.marker(latlng, {
+            icon: L.divIcon({
+                iconSize: [size, size],
+                // iconAnchor: [size / 2, size + 9],
+                className: `circle ${harm}`,
+                html: `${emojis[harm]}️`,
             })
-        },
+        });
+    }
+})
 
-        pointToLayer: function (feature, latlng) {
-            const size = 20
-            let harm = feature.properties.harm
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    iconSize: [size, size],
-                    // iconAnchor: [size / 2, size + 9],
-                    className: `circle ${harm}`,
-                    html: `${emojis[harm]}️`,
-                })
-            });
-        }
-    });
-    geojsonLayer.addTo(map);
-
-    updateCount();
+let clusterLayer = L.markerClusterGroup({
+	spiderfyOnMaxZoom: false,
+	showCoverageOnHover: false,
+	zoomToBoundsOnClick: false,
+    disableClusteringAtZoom: 12,
 });
+map.addLayer(clusterLayer)
 
-map.on('zoomend', updateCount);
-map.on('moveend', updateCount);
+map.setView([39.00, -76.88], 13)
+map.setView([39.0005, -76.88], 13)  // Hack to get markers to show on first load
+
+function getNewData() {
+    let bounds = map.getBounds()
+    let south = Math.floor(bounds.getSouth())
+    let north = Math.ceil(bounds.getNorth())
+    let west = Math.floor(bounds.getWest())
+    let east = Math.ceil(bounds.getEast())
+    for (let lat = south; lat < north + 1; lat++) {
+        for (let long = west; long < east + 1; long++) {
+            for (let year = 2015; year < 2020; year++) {
+                let file = `geojson/geojson-${year}-${lat}_${long}.json`
+                if (!loaded.has(file)) {
+                    console.log(file)
+                    $.getJSON(file, function (data) {
+                        geojsonLayer.addData(data)
+                    });
+                    loaded.add(file)
+                }
+            }
+        }
+    }
+    clusterLayer.clearLayers()
+    clusterLayer.addLayer(geojsonLayer)
+    updateCount();
+}
 
 function getCounts() {
     let crash_count = 0
