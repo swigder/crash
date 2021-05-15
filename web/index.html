@@ -30,8 +30,10 @@
 
 <section class="section">
     <div class="container">
-        <h1 class="title">
+        <h1 class="title" x-data="{detail: metadata}" x-on:metadata-load.window="detail = $event.detail">
             Traffic fatalities
+            <template x-if="detail"><span>(<span x-text="detail.min_year"></span> - <span
+                    x-text="detail.max_year"></span>)</span></template>
         </h1>
     </div>
 </section>
@@ -77,7 +79,7 @@
         <table class="table">
             <tbody>
             <tr>
-                <th class="has-text-right">Crashes</th>
+                <th class="has-text-right">Fatal crashes</th>
                 <td x-text="detail.crash_count"></td>
                 <th class="has-text-right">Fatalities</th>
                 <td x-text="detail.fatality_count"></td>
@@ -85,6 +87,12 @@
             </tbody>
         </table>
     </div>
+</div>
+
+<div class="content is-small">
+    <p>
+    Data source: United States National Highway Traffic Safety Administration, Fatality Analysis Reporting System (FARS)
+    </p>
 </div>
 
 <script src="script.js"></script>

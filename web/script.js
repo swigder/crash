@@ -1,5 +1,18 @@
 const loaded = new Set()
 
+let metadata = {}
+$.ajax({
+    url: "geojson/metadata.json",
+    async: false,
+    dataType: "json",
+    success: data => {
+        metadata = data;
+        window.dispatchEvent(new CustomEvent("metadata-load", {
+            detail: metadata
+        }))
+    }
+})
+
 let map = L.map('map')
 map.on('moveend zoomend load', getNewData);
 
@@ -75,15 +88,25 @@ document.getElementById('location-input').onkeydown = function (event) {
     }
 }
 
+function roundLatLongDown(latlong) {
+    let interval = metadata.latlong_interval
+    return Math.floor(latlong / interval) * interval;
+}
+
+function roundLatLongUp(latlong) {
+    let interval = metadata.latlong_interval
+    return Math.ceil(latlong / interval) * interval + interval;
+}
+
 function getNewData() {
     let bounds = map.getBounds()
-    let south = Math.floor(bounds.getSouth() / 2) * 2
-    let north = Math.ceil(bounds.getNorth() / 2) * 2
-    let west = Math.floor(bounds.getWest() / 2) * 2
-    let east = Math.ceil(bounds.getEast() / 2) * 2
+    let south = roundLatLongDown(bounds.getSouth())
+    let north = roundLatLongUp(bounds.getNorth())
+    let west = roundLatLongDown(bounds.getWest())
+    let east = roundLatLongUp(bounds.getEast())
     let tasks = []
-    for (let lat = south; lat < north + 2; lat += 2) {
-        for (let long = west; long < east + 2; long += 2) {
+    for (let lat = south; lat < north; lat += metadata.latlong_interval) {
+        for (let long = west; long < east; long += metadata.latlong_interval) {
             let file = `geojson/geojson-${lat}_${long}.json`
             if (!loaded.has(file)) {
                 loaded.add(file)

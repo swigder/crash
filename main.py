@@ -10,6 +10,8 @@ BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
 CRASH_API = f'{BASE_URL}/crashes'
 DATA_API = f'{BASE_URL}/FARSData'
 
+GEOJSON_BASE_DIR = 'web/geojson'
+
 
 def query_fars_api(api, params, force_cache_update=False):
     def get_filename():
@@ -75,8 +77,8 @@ def merge_data(year):
     vehicle_df = pd.read_csv(f'data/Vehicle-{year}.csv')
     vehicle_df = vehicle_df.groupby(KEY_COLUMNS).size()
 
-    df = crash_df.\
-        merge(person_df.rename('Person'), how='left', left_index=True, right_index=True).\
+    df = crash_df. \
+        merge(person_df.rename('Person'), how='left', left_index=True, right_index=True). \
         merge(vehicle_df.rename('Vehicle'), how='left', left_index=True, right_index=True)
 
     df.to_pickle(f'data/df-{year}.pkl')
@@ -90,18 +92,31 @@ def generate_geojson():
         dfs.append(df)
     df = pd.concat(dfs, axis=0)
 
+    latlong_interval = 2
+
     grouped = df.groupby(
-        df[['LATITUDE', 'LONGITUD']].agg(lambda ys: '_'.join([str(int(y / 2)*2) for y in ys]), axis=1))
+        df[['LATITUDE', 'LONGITUD']].agg(
+            lambda ys: '_'.join([str(int(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
     for name, group in grouped:
-        with open(f'geojson/geojson-{name}.json', 'w') as outfile:
+        with open(f'{GEOJSON_BASE_DIR}/geojson-{name}.json', 'w') as outfile:
             json.dump(convert_to_geojson(group.reset_index()), outfile)
+
+    df = df.reset_index()
+    metadata = {
+        'latlong_interval': latlong_interval,
+        'min_year': int(df['CASEYEAR'].min()),
+        'max_year': int(df['CASEYEAR'].max()),
+    }
+
+    with open(f'{GEOJSON_BASE_DIR}/metadata.json', 'w') as outfile:
+        json.dump(metadata, outfile)
 
 
 if __name__ == '__main__':
     years = range(2010, 2015)
     for _year in years:
-        refresh_data_from_server(year=_year)
-        filter_data(year=_year)
-        merge_data(year=_year)
+        # refresh_data_from_server(year=_year)
+        # filter_data(year=_year)
+        # merge_data(year=_year)
         pass
     generate_geojson()
