@@ -58,6 +58,23 @@ map.addLayer(clusterLayer)
 
 map.setView([39.00, -76.88], 13)
 
+document.getElementById('location-input').onkeydown = function (event) {
+    let e = event || window.event;
+    if (e.key === "Enter") {
+        // https://api.mapbox.com/geocoding/v5/mapbox.places/Los%20Angeles.json?access_token=YOUR_MAPBOX_ACCESS_TOKEN
+        $.getJSON(`https://api.mapbox.com/geocoding/v5/mapbox.places/${e.target.value}.json`, {
+            access_token: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g',
+            // query: e.target.value,
+            limit: 1
+        }, function (data) {
+            let result = data.features[0]
+            let longLat = result.center
+            map.setView([longLat[1], longLat[0]], 13);
+            e.target.value = result.place_name
+        })
+    }
+}
+
 function getNewData() {
     let bounds = map.getBounds()
     let south = Math.floor(bounds.getSouth() / 2) * 2
