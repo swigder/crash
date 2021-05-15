@@ -48,38 +48,46 @@ let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
 })
 
 let clusterLayer = L.markerClusterGroup({
-	spiderfyOnMaxZoom: false,
-	showCoverageOnHover: false,
-	zoomToBoundsOnClick: false,
+    spiderfyOnMaxZoom: false,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 12,
+    chunkedLoading: true,
 });
 map.addLayer(clusterLayer)
 
 map.setView([39.00, -76.88], 13)
-map.setView([39.0005, -76.88], 13)  // Hack to get markers to show on first load
 
 function getNewData() {
     let bounds = map.getBounds()
-    let south = Math.floor(bounds.getSouth())
-    let north = Math.ceil(bounds.getNorth())
-    let west = Math.floor(bounds.getWest())
-    let east = Math.ceil(bounds.getEast())
-    for (let lat = south; lat < north + 1; lat++) {
-        for (let long = west; long < east + 1; long++) {
-            for (let year = 2015; year < 2020; year++) {
-                let file = `geojson/geojson-${year}-${lat}_${long}.json`
-                if (!loaded.has(file)) {
-                    $.getJSON(file, function (data) {
-                        geojsonLayer.addData(data)
-                    });
-                    loaded.add(file)
-                }
+    let south = Math.floor(bounds.getSouth() / 2) * 2
+    let north = Math.ceil(bounds.getNorth() / 2) * 2
+    let west = Math.floor(bounds.getWest() / 2) * 2
+    let east = Math.ceil(bounds.getEast() / 2) * 2
+    let tasks = []
+    for (let lat = south; lat < north + 2; lat += 2) {
+        for (let long = west; long < east + 2; long += 2) {
+            let file = `geojson/geojson-${lat}_${long}.json`
+            if (!loaded.has(file)) {
+                loaded.add(file)
+                tasks.push($.Deferred(function (defer) {
+                    $.ajax(file).then(defer.resolve, defer.resolve);
+                }).promise())
             }
         }
     }
-    clusterLayer.clearLayers()
-    clusterLayer.addLayer(geojsonLayer)
-    updateCount();
+    $.when(...tasks).then(function (...allData) {
+        allData.forEach(data => {
+            if (data[1] === "success") {
+                geojsonLayer.addData(data[0]);
+            }
+        })
+        if (tasks.length > 0) {
+            clusterLayer.clearLayers()
+            clusterLayer.addLayer(geojsonLayer)
+        }
+        updateCount();
+    });
 }
 
 function getCounts() {

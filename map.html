@@ -69,7 +69,7 @@
 </div>
 
 <div class="columns">
-    <div class="column" x-data="{detail: {crash_count: 0, fatality_count: 0}}"
+    <div class="column" x-data="{detail: getCounts()}"
          x-on:count-updated.window="detail = $event.detail">
         <table class="table">
             <tbody>

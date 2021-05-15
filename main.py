@@ -1,3 +1,4 @@
+import glob
 import json
 
 import pandas as pd
@@ -81,19 +82,26 @@ def merge_data(year):
     df.to_pickle(f'data/df-{year}.pkl')
 
 
-def generate_geojson(year):
-    df = pd.read_pickle(f'data/df-{year}.pkl')
+def generate_geojson():
+    all_pickles = glob.glob('data/df-*.pkl')
+    dfs = []
+    for filename in all_pickles:
+        df = pd.read_pickle(filename)
+        dfs.append(df)
+    df = pd.concat(dfs, axis=0)
+
     grouped = df.groupby(
-        df[['LATITUDE', 'LONGITUD']].agg(lambda ys: '_'.join([str(int(y)) for y in ys]), axis=1))
+        df[['LATITUDE', 'LONGITUD']].agg(lambda ys: '_'.join([str(int(y / 2)*2) for y in ys]), axis=1))
     for name, group in grouped:
-        with open(f'geojson/geojson-{year}-{name}.json', 'w') as outfile:
+        with open(f'geojson/geojson-{name}.json', 'w') as outfile:
             json.dump(convert_to_geojson(group.reset_index()), outfile)
 
 
 if __name__ == '__main__':
-    years = range(2015, 2020)
+    years = range(2010, 2015)
     for _year in years:
-        # refresh_data_from_server(year=_year)
-        # filter_data(year=_year)
-        # merge_data(year=_year)
-        generate_geojson(year=_year)
+        refresh_data_from_server(year=_year)
+        filter_data(year=_year)
+        merge_data(year=_year)
+        pass
+    generate_geojson()
