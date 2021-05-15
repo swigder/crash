@@ -5,15 +5,9 @@ html, body {
     font-family: "Lucinda Grande", "Lucinda Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
 }
 
-#main {
-    display: flex;
+.leaflet-container {
+    z-index: 0;
     height: 75vh;
-}
-
-#map {
-    /*position: absolute;*/
-    /*width: 80%;*/
-    /*height: 80%;*/
 }
 
 .circle {
