@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-158.529497, 56.31095]}, "properties": {"year": 2011, "case_id": 20021, "harm": "ped", "injuries": [{"severity": "Fatal Injury (K)", "person": "Pedestrian"}], "num_vehicles": 1, "num_fatalities": 1}}]}
