@@ -2,7 +2,7 @@ const loaded = new Set()
 
 let metadata = {}
 $.ajax({
-    url: "geojson/metadata.json",
+    url: "geojson/file-metadata.json",
     async: false,
     dataType: "json",
     success: data => {
@@ -57,7 +57,11 @@ let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
                 html: `${emojis[harm]}️`,
             })
         });
-    }
+    },
+
+    filter: function (feature, layer) {
+        return showFeature(feature);
+    },
 })
 
 let clusterLayer = L.markerClusterGroup({
@@ -87,6 +91,8 @@ document.getElementById('location-input').onkeydown = function (event) {
         })
     }
 }
+
+let fullGeojsonData = []
 
 function roundLatLongDown(latlong) {
     let interval = metadata.latlong_interval
@@ -119,6 +125,7 @@ function getNewData() {
     $.when(...tasks).then(function (...allData) {
         allData.forEach(data => {
             if (data[1] === "success") {
+                fullGeojsonData = fullGeojsonData.concat(data[0])
                 geojsonLayer.addData(data[0]);
             }
         })
@@ -135,7 +142,7 @@ function getCounts() {
     let fatality_count = 0
     for (const property in geojsonLayer._layers) {
         l = geojsonLayer._layers[property]
-        if (l instanceof L.Marker && map.getBounds().contains(l.getLatLng())) {
+        if (l instanceof L.Marker && map.getBounds().contains(l.getLatLng()) && showFeature(l.feature)) {
             crash_count++
             fatality_count += l.feature.properties.num_fatalities
         }
@@ -148,3 +155,28 @@ function updateCount() {
         detail: getCounts()
     }));
 }
+
+const filters = {
+    "harm": new Set(["ped", "car", "bike", "other"])
+}
+
+function showFeature(feature) {
+    return filters["harm"].has(feature.properties.harm)
+}
+
+$("button").on('click', (event) => {
+    let button = $(event.currentTarget)
+    button.toggleClass('is-dark is-light is-selected');
+    let filter = button.attr("data-filter-type")
+    let value = button.attr("data-filter-value")
+    if (button.hasClass('is-selected')) {
+        filters[filter].add(value);
+    } else {
+        filters[filter].delete(value);
+    }
+    geojsonLayer.clearLayers()
+    geojsonLayer.addData(fullGeojsonData)
+    clusterLayer.clearLayers()
+    clusterLayer.addLayer(geojsonLayer)
+    updateCount()
+});

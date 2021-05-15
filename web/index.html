@@ -38,38 +38,47 @@
     </div>
 </section>
 
-<div class="columns" id="main">
+<div id="main">
+<div class="columns card">
     <div id="map" class="column is-three-quarters"></div>
 
-    <div class="column" x-data="{detail: null}" x-on:items-load.window="detail = $event.detail">
+    <div class="column">
         <input id="location-input" class="input mb-5" type="text" placeholder="Jump to location">
 
-        <template x-if="detail">
-            <table class="table">
-                <tbody>
-                <tr>
-                    <th class="has-text-right">Case</th>
-                    <td x-text="detail.case_id"></td>
-                </tr>
-                <tr>
-                    <th class="has-text-right">Year</th>
-                    <td x-text="detail.year"></td>
-                </tr>
-                <tr>
-                    <th class="has-text-right">Injuries</th>
-                    <td>
-                        <template x-for="injury in detail.injuries" :key="injury">
-                            <dl><span x-text="injury.person"></span> - <span x-text="injury.severity"></span></dl>
-                        </template>
-                    </td>
-                </tr>
-                <tr>
-                    <th class="has-text-right">Vehicles</th>
-                    <td x-text="detail.num_vehicles"></td>
-                </tr>
-                </tbody>
-            </table>
-        </template>
+        <div class="buttons has-addons">
+            <button data-filter-type="harm" data-filter-value="ped" class="button is-dark is-selected">Pedestrian</button>
+            <button data-filter-type="harm" data-filter-value="bike" class="button is-dark is-selected">Cyclist</button>
+            <button data-filter-type="harm" data-filter-value="car" class="button is-dark is-selected">Person in motor vehicle</button>
+        </div>
+
+        <div x-data="{detail: null}" x-on:items-load.window="detail = $event.detail">
+            <template x-if="detail">
+                <table class="table">
+                    <tbody>
+                    <tr>
+                        <th class="has-text-right">Case</th>
+                        <td x-text="detail.case_id"></td>
+                    </tr>
+                    <tr>
+                        <th class="has-text-right">Year</th>
+                        <td x-text="detail.year"></td>
+                    </tr>
+                    <tr>
+                        <th class="has-text-right">Injuries</th>
+                        <td>
+                            <template x-for="injury in detail.injuries" :key="injury">
+                                <dl><span x-text="injury.person"></span> - <span x-text="injury.severity"></span></dl>
+                            </template>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="has-text-right">Vehicles</th>
+                        <td x-text="detail.num_vehicles"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </template>
+        </div>
     </div>
 </div>
 
@@ -88,10 +97,12 @@
         </table>
     </div>
 </div>
+</div>
 
 <div class="content is-small">
     <p>
-    Data source: United States National Highway Traffic Safety Administration, Fatality Analysis Reporting System (FARS)
+        Data source: United States National Highway Traffic Safety Administration, Fatality Analysis Reporting System
+        (FARS)
     </p>
 </div>
 
