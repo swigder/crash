@@ -38,7 +38,6 @@ let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
     },
 
     onEachFeature: function (feature, layer) {
-        // layer.bindPopup(feature.properties.year);
         layer.on('click', function (e) {
             window.dispatchEvent(new CustomEvent("items-load", {
                 detail: e.sourceTarget.feature.properties
@@ -52,7 +51,6 @@ let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
         return L.marker(latlng, {
             icon: L.divIcon({
                 iconSize: [size, size],
-                // iconAnchor: [size / 2, size + 9],
                 className: `circle ${harm}`,
                 html: `${emojis[harm]}️`,
             })
@@ -78,10 +76,8 @@ map.setView([39.00, -76.88], 13)
 document.getElementById('location-input').onkeydown = function (event) {
     let e = event || window.event;
     if (e.key === "Enter") {
-        // https://api.mapbox.com/geocoding/v5/mapbox.places/Los%20Angeles.json?access_token=YOUR_MAPBOX_ACCESS_TOKEN
         $.getJSON(`https://api.mapbox.com/geocoding/v5/mapbox.places/${e.target.value}.json`, {
             access_token: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g',
-            // query: e.target.value,
             limit: 1
         }, function (data) {
             let result = data.features[0]
@@ -92,7 +88,7 @@ document.getElementById('location-input').onkeydown = function (event) {
     }
 }
 
-let fullGeojsonData = []
+let fullGeojsonData = {type: "FeatureCollection", features: []}
 
 function roundLatLongDown(latlong) {
     let interval = metadata.latlong_interval
@@ -125,7 +121,7 @@ function getNewData() {
     $.when(...tasks).then(function (...allData) {
         allData.forEach(data => {
             if (data[1] === "success") {
-                fullGeojsonData.push(...data[0])
+                Array.prototype.push.apply(fullGeojsonData.features, data[0].features)
                 geojsonLayer.addData(data[0]);
             }
         })
