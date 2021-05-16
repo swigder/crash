@@ -1,8 +1,17 @@
+const markerSize = 20
+
+const emojis = {
+    'car': '🚙',
+    'bike': '🚴',
+    'ped': '🚶',
+    'other': ''
+}
+
 const loaded = new Set()
 
 let metadata = {}
 $.ajax({
-    url: "geojson/file-metadata.json",
+    url: "data/file-metadata.json",
     async: false,
     dataType: "json",
     success: data => {
@@ -12,6 +21,8 @@ $.ajax({
         }))
     }
 })
+
+let allMarkers = []
 
 let map = L.map('map')
 map.on('moveend zoomend load', getNewData);
@@ -25,42 +36,23 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     accessToken: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g'
 }).addTo(map);
 
-const emojis = {
-    'car': '🚙',
-    'bike': '🚴',
-    'ped': '🚶',
-    'other': ''
+function onMarkerClick(e) {
+    window.dispatchEvent(new CustomEvent("items-load", {
+        detail: e.layer.options.data
+    }));
 }
 
-let geojsonLayer = L.geoJSON({"type": "FeatureCollection", "features": []}, {
-    style: function (feature) {
-        return feature.properties && feature.properties.style;
-    },
-
-    onEachFeature: function (feature, layer) {
-        layer.on('click', function (e) {
-            window.dispatchEvent(new CustomEvent("items-load", {
-                detail: e.sourceTarget.feature.properties
-            }));
-        })
-    },
-
-    pointToLayer: function (feature, latlng) {
-        const size = 20
-        let harm = feature.properties.harm
-        return L.marker(latlng, {
-            icon: L.divIcon({
-                iconSize: [size, size],
-                className: `circle ${harm}`,
-                html: `${emojis[harm]}️`,
-            })
-        });
-    },
-
-    filter: function (feature, layer) {
-        return showFeature(feature);
-    },
-})
+function pointToLayer(point) {
+    let harm = point.data.harm
+    return L.marker(point.latlng, {
+        icon: L.divIcon({
+            iconSize: [markerSize, markerSize],
+            className: `circle ${harm}`,
+            html: `${emojis[harm]}️`,
+        }),
+        data: point.data,
+    });
+}
 
 let clusterLayer = L.markerClusterGroup({
     spiderfyOnMaxZoom: false,
@@ -72,23 +64,6 @@ let clusterLayer = L.markerClusterGroup({
 map.addLayer(clusterLayer)
 
 map.setView([39.00, -76.88], 13)
-
-document.getElementById('location-input').onkeydown = function (event) {
-    let e = event || window.event;
-    if (e.key === "Enter") {
-        $.getJSON(`https://api.mapbox.com/geocoding/v5/mapbox.places/${e.target.value}.json`, {
-            access_token: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g',
-            limit: 1
-        }, function (data) {
-            let result = data.features[0]
-            let longLat = result.center
-            map.setView([longLat[1], longLat[0]], 13);
-            e.target.value = result.place_name
-        })
-    }
-}
-
-let fullGeojsonData = {type: "FeatureCollection", features: []}
 
 function roundLatLongDown(latlong) {
     let interval = metadata.latlong_interval
@@ -109,7 +84,7 @@ function getNewData() {
     let tasks = []
     for (let lat = south; lat < north; lat += metadata.latlong_interval) {
         for (let long = west; long < east; long += metadata.latlong_interval) {
-            let file = `geojson/geojson-${lat}_${long}.json`
+            let file = `data/data-${lat}_${long}.json`
             if (!loaded.has(file)) {
                 loaded.add(file)
                 tasks.push($.Deferred(function (defer) {
@@ -121,13 +96,12 @@ function getNewData() {
     $.when(...tasks).then(function (...allData) {
         allData.forEach(data => {
             if (data[1] === "success") {
-                Array.prototype.push.apply(fullGeojsonData.features, data[0].features)
-                geojsonLayer.addData(data[0]);
+                Array.prototype.push.apply(allMarkers, data[0].map(d => pointToLayer(d)))
             }
         })
         if (tasks.length > 0) {
             clusterLayer.clearLayers()
-            clusterLayer.addLayer(geojsonLayer)
+            clusterLayer.addLayers(L.featureGroup(allMarkers).on('click', onMarkerClick))
         }
         updateCount();
     });
@@ -136,13 +110,13 @@ function getNewData() {
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
-    for (const property in geojsonLayer._layers) {
-        l = geojsonLayer._layers[property]
-        if (l instanceof L.Marker && map.getBounds().contains(l.getLatLng()) && showFeature(l.feature)) {
+    allMarkers.forEach(function (marker) {
+
+    })
+    allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
             crash_count++
-            fatality_count += l.feature.properties.num_fatalities
-        }
-    }
+            fatality_count += marker.options.data.num_fatalities
+    })
     return {crash_count: crash_count, fatality_count: fatality_count};
 }
 
@@ -156,9 +130,23 @@ const filters = {
     "harm": new Set(["ped", "car", "bike", "other"])
 }
 
-function showFeature(feature) {
-    return filters["harm"].has(feature.properties.harm)
+function showFeature(marker) {
+    return marker.options.data && filters["harm"].has(marker.options.data.harm)
 }
+
+$('#location-input').on('keydown', function (event) {
+    if (event.key === "Enter") {
+        $.getJSON(`https://api.mapbox.com/geocoding/v5/mapbox.places/${event.target.value}.json`, {
+            access_token: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g',
+            limit: 1
+        }, function (data) {
+            let result = data.features[0]
+            let longLat = result.center
+            map.setView([longLat[1], longLat[0]], 13);
+            event.target.value = result.place_name
+        })
+    }
+});
 
 $("button").on('click', (event) => {
     let button = $(event.currentTarget)
@@ -170,9 +158,7 @@ $("button").on('click', (event) => {
     } else {
         filters[filter].delete(value);
     }
-    geojsonLayer.clearLayers()
-    geojsonLayer.addData(fullGeojsonData)
     clusterLayer.clearLayers()
-    clusterLayer.addLayer(geojsonLayer)
+    clusterLayer.addLayers(allMarkers.filter(showFeature))
     updateCount()
 });

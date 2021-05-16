@@ -4,13 +4,13 @@ import json
 import pandas as pd
 import requests
 
-from generate_geojson import convert_to_geojson
+from generate_web_data import convert_to_web_data
 
 BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
 CRASH_API = f'{BASE_URL}/crashes'
 DATA_API = f'{BASE_URL}/FARSData'
 
-GEOJSON_BASE_DIR = 'web/geojson'
+WEB_DATA_BASE_DIR = 'web/data'
 
 
 def query_fars_api(api, params, force_cache_update=False):
@@ -84,7 +84,7 @@ def merge_data(year):
     df.to_pickle(f'data/df-{year}.pkl')
 
 
-def generate_geojson():
+def generate_web_data():
     all_pickles = glob.glob('data/df-*.pkl')
     dfs = []
     for filename in all_pickles:
@@ -98,8 +98,8 @@ def generate_geojson():
         df[['LATITUDE', 'LONGITUD']].agg(
             lambda ys: '_'.join([str(int(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
     for name, group in grouped:
-        with open(f'{GEOJSON_BASE_DIR}/geojson-{name}.json', 'w') as outfile:
-            json.dump(convert_to_geojson(group.reset_index()), outfile)
+        with open(f'{WEB_DATA_BASE_DIR}/data-{name}.json', 'w') as outfile:
+            json.dump(convert_to_web_data(group.reset_index()), outfile)
 
     df = df.reset_index()
     metadata = {
@@ -108,15 +108,15 @@ def generate_geojson():
         'max_year': int(df['CASEYEAR'].max()),
     }
 
-    with open(f'{GEOJSON_BASE_DIR}/metadata.json', 'w') as outfile:
+    with open(f'{WEB_DATA_BASE_DIR}/file-metadata.json', 'w') as outfile:
         json.dump(metadata, outfile)
 
 
 if __name__ == '__main__':
-    years = range(2010, 2015)
-    for _year in years:
-        # refresh_data_from_server(year=_year)
-        # filter_data(year=_year)
-        # merge_data(year=_year)
-        pass
-    generate_geojson()
+    years = range(2010, 2019)
+    # for _year in years:
+    #     refresh_data_from_server(year=_year)
+    #     filter_data(year=_year)
+    #     merge_data(year=_year)
+    #     pass
+    generate_web_data()

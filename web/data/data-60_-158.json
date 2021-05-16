@@ -1,0 +1,1 @@
+[{"latlng": [61.57802778, -159.55761667], "data": {"year": 2018, "case_id": 20004, "harm": "car", "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}, {"severity": "Fatal Injury (K)", "person": "Passenger"}], "num_vehicles": 1, "num_fatalities": 2}}]
