@@ -27,10 +27,12 @@ let allMarkers = []
 let map = L.map('map')
 map.on('moveend zoomend load', getNewData);
 
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+// TODO: Check that retina display tiles do not cause problems on non-retina devices (`@2x` below).
+L.tileLayer('https://api.mapbox.com/styles/v1/{styleAuthor}/{styleId}/tiles/{z}/{x}/{y}@2x?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
-    id: 'mapbox/streets-v11',
+    styleAuthor: 'golmschenk',
+    styleId: 'ckoss0cw40zbg17pen2nl0zv3',
     tileSize: 512,
     zoomOffset: -1,
     accessToken: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g'
