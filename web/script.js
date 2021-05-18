@@ -1,14 +1,3 @@
-const markerSize = 20
-
-const emojis = {
-    'car': '🚙',
-    'bike': '🚴',
-    'ped': '🚶',
-    'other': ''
-}
-
-const loaded = new Set()
-
 let metadata = {}
 $.ajax({
     url: "data/file-metadata.json",
@@ -31,6 +20,16 @@ let map = new mapboxgl.Map({
     zoom: 13,
     maxZoom: 18,
 });
+
+map.addControl(
+    new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl,
+        flyTo: {
+            duration: 0,
+        },
+    })
+);
 
 map.on('load', getNewData);
 map.on('moveend', getNewData);
@@ -84,9 +83,8 @@ function getNewData() {
                         '#223b53',
                         'ped',
                         '#e55e5e',
-                        'other',
+                        /* other */
                         '#3bb2d0',
-                        /* other */ '#ccc'
                     ],
                     'circle-radius': {
                         stops: [[4, 1], [7, 3], [10, 6], [13, 10], [16, 20]]
