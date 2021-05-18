@@ -39,6 +39,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{styleAuthor}/{styleId}/tiles/{z}/
 }).addTo(map);
 
 function onMarkerClick(e) {
+    $("#crash-tab").click()
     window.dispatchEvent(new CustomEvent("items-load", {
         detail: e.layer.options.data
     }));
@@ -112,9 +113,6 @@ function getNewData() {
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
-    allMarkers.forEach(function (marker) {
-
-    })
     allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
             crash_count++
             fatality_count += marker.options.data.num_fatalities

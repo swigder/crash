@@ -5,23 +5,24 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-          crossorigin=""/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
-
-    <link rel="stylesheet" href="styles.css"/>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
             integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
+
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+
+    <link rel="stylesheet" href="styles.css"/>
 
     <title>Traffic fatalities</title>
 </head>
@@ -39,75 +40,106 @@
 </section>
 
 <div id="main">
-<div class="columns card">
-    <div id="map" class="column is-three-quarters"></div>
+    <div class="columns card">
+        <div id="map" class="column is-three-quarters"></div>
 
-    <div class="column">
-        <input id="location-input" class="input mb-5" type="text" placeholder="Jump to location">
+        <div class="column">
+            <input id="location-input" class="input mb-5" type="text" placeholder="Jump to location">
 
-        <div class="buttons has-addons">
-            <button data-filter-type="harm" data-filter-value="ped" class="button is-dark is-selected">Pedestrian</button>
-            <button data-filter-type="harm" data-filter-value="bike" class="button is-dark is-selected">Cyclist</button>
-            <button data-filter-type="harm" data-filter-value="car" class="button is-dark is-selected">Person in motor vehicle</button>
-            <button data-filter-type="harm" data-filter-value="other" class="button is-dark is-selected">Other</button>
-        </div>
+            <div id="tabs-with-content">
+                <div class="tabs">
+                    <ul>
+                        <li><a>Map</a></li>
+                        <li id="crash-tab"><a>Crash</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <section class="tab-content">
+                        <div class="buttons has-addons">
+                            <button data-filter-type="harm" data-filter-value="ped" class="button is-dark is-selected">
+                                Pedestrian
+                            </button>
+                            <button data-filter-type="harm" data-filter-value="bike" class="button is-dark is-selected">
+                                Cyclist
+                            </button>
+                            <button data-filter-type="harm" data-filter-value="car" class="button is-dark is-selected">
+                                Person in
+                                motor vehicle
+                            </button>
+                            <button data-filter-type="harm" data-filter-value="other"
+                                    class="button is-dark is-selected">Other
+                            </button>
+                        </div>
 
-        <div x-data="{detail: null}" x-on:items-load.window="detail = $event.detail">
-            <template x-if="detail">
-                <table class="table">
-                    <tbody>
-                    <tr>
-                        <th class="has-text-right">Case</th>
-                        <td x-text="detail.case_id"></td>
-                    </tr>
-                    <tr>
-                        <th class="has-text-right">Year</th>
-                        <td x-text="detail.year"></td>
-                    </tr>
-                    <tr>
-                        <th class="has-text-right">Injuries</th>
-                        <td>
-                            <template x-for="injury in detail.injuries" :key="injury">
-                                <dl><span x-text="injury.person"></span> - <span x-text="injury.severity"></span></dl>
+                        <div class="column" x-data="{detail: getCounts()}"
+                             x-on:count-updated.window="detail = $event.detail">
+                            <table class="table">
+                                <tbody>
+                                <tr>
+                                    <th class="has-text-right">Fatal crashes</th>
+                                    <td x-text="detail.crash_count"></td>
+                                </tr>
+                                <tr>
+                                    <th class="has-text-right">Fatalities</th>
+                                    <td x-text="detail.fatality_count"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <section class="tab-content">
+                        <div x-data="{detail: null}" x-on:items-load.window="detail = $event.detail">
+                            <template x-if="detail">
+                                <table class="table">
+                                    <tbody>
+                                    <tr>
+                                        <th class="has-text-right">Case</th>
+                                        <td x-text="detail.case_id"></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="has-text-right">Year</th>
+                                        <td x-text="detail.year"></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="has-text-right">Injuries</th>
+                                        <td>
+                                            <template x-for="injury in detail.injuries" :key="injury">
+                                                <dl><span x-text="injury.person"></span> - <span
+                                                        x-text="injury.severity"></span>
+                                                </dl>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="has-text-right">Vehicles</th>
+                                        <td x-text="detail.num_vehicles"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
                             </template>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="has-text-right">Vehicles</th>
-                        <td x-text="detail.num_vehicles"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </template>
+                            <template x-if="!detail">
+                                <p class="content">Click on a crash to see details.</p>
+                            </template>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="columns">
-    <div class="column" x-data="{detail: getCounts()}"
-         x-on:count-updated.window="detail = $event.detail">
-        <table class="table">
-            <tbody>
-            <tr>
-                <th class="has-text-right">Fatal crashes</th>
-                <td x-text="detail.crash_count"></td>
-                <th class="has-text-right">Fatalities</th>
-                <td x-text="detail.fatality_count"></td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="content is-small">
+        <p>
+            Data source: United
+            States National Highway Traffic Safety Administration, <a
+                href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars">Fatality Analysis
+            Reporting System</a>
+        </p>
     </div>
-</div>
-</div>
 
-<div class="content is-small">
-    <p>
-        Data source: United States National Highway Traffic Safety Administration, Fatality Analysis Reporting System
-        (FARS)
-    </p>
 </div>
 
 <script src="script.js"></script>
+<script src="tabs.js"></script>
 
 </body>
 </html>
