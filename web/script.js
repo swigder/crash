@@ -22,21 +22,19 @@ $.ajax({
     }
 })
 
-let allMarkers = []
-
-let map = L.map('map')
-map.on('moveend zoomend load', getNewData);
-
 // TODO: Check that retina display tiles do not cause problems on non-retina devices (`@2x` below).
-L.tileLayer('https://api.mapbox.com/styles/v1/{styleAuthor}/{styleId}/tiles/{z}/{x}/{y}@2x?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g';
+let map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/golmschenk/ckoss0cw40zbg17pen2nl0zv3',
+    center: [-76.88, 39.00],
+    zoom: 13,
     maxZoom: 18,
-    styleAuthor: 'golmschenk',
-    styleId: 'ckoss0cw40zbg17pen2nl0zv3',
-    tileSize: 512,
-    zoomOffset: -1,
-    accessToken: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g'
-}).addTo(map);
+});
+
+map.on('load', getNewData);
+map.on('moveend', getNewData);
+map.on('zoomend', getNewData);
 
 function onMarkerClick(e) {
     $("#crash-tab").click()
@@ -44,29 +42,6 @@ function onMarkerClick(e) {
         detail: e.layer.options.data
     }));
 }
-
-function pointToLayer(point) {
-    let harm = point.data.harm
-    return L.marker(point.latlng, {
-        icon: L.divIcon({
-            iconSize: [markerSize, markerSize],
-            className: `circle ${harm}`,
-            html: `${emojis[harm]}️`,
-        }),
-        data: point.data,
-    });
-}
-
-let clusterLayer = L.markerClusterGroup({
-    spiderfyOnMaxZoom: false,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: false,
-    disableClusteringAtZoom: 12,
-    chunkedLoading: true,
-});
-map.addLayer(clusterLayer)
-
-map.setView([39.00, -76.88], 13)
 
 function roundLatLongDown(latlong) {
     let interval = metadata.latlong_interval
@@ -84,38 +59,51 @@ function getNewData() {
     let north = roundLatLongUp(bounds.getNorth())
     let west = roundLatLongDown(bounds.getWest())
     let east = roundLatLongUp(bounds.getEast())
-    let tasks = []
     for (let lat = south; lat < north; lat += metadata.latlong_interval) {
         for (let long = west; long < east; long += metadata.latlong_interval) {
-            let file = `data/data-${lat}_${long}.json`
-            if (!loaded.has(file)) {
-                loaded.add(file)
-                tasks.push($.Deferred(function (defer) {
-                    $.ajax(file).then(defer.resolve, defer.resolve);
-                }).promise())
+            let filename = `data/data-${lat}_${long}.json`
+            if (map.getSource(filename)) {
+                continue;
             }
+            map.addSource(filename, {
+                'type': 'geojson',
+                'data': filename,
+                'cluster': false,
+            });
+            map.addLayer({
+                id: filename,
+                type: 'circle',
+                source: filename,
+                'paint': {
+                    'circle-color': [
+                        'match',
+                        ['get', 'harm'],
+                        'bike',
+                        '#fbb03b',
+                        'car',
+                        '#223b53',
+                        'ped',
+                        '#e55e5e',
+                        'other',
+                        '#3bb2d0',
+                        /* other */ '#ccc'
+                    ],
+                    'circle-radius': {
+                        stops: [[4, 1], [7, 3], [10, 6], [13, 10], [16, 20]]
+                    }
+                },
+            });
+            // updateCount();
         }
     }
-    $.when(...tasks).then(function (...allData) {
-        allData.forEach(data => {
-            if (data[1] === "success") {
-                Array.prototype.push.apply(allMarkers, data[0].map(d => pointToLayer(d)))
-            }
-        })
-        if (tasks.length > 0) {
-            clusterLayer.clearLayers()
-            clusterLayer.addLayers(L.featureGroup(allMarkers).on('click', onMarkerClick))
-        }
-        updateCount();
-    });
 }
 
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
     allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
-            crash_count++
-            fatality_count += marker.options.data.num_fatalities
+        crash_count++
+        fatality_count += marker.options.data.num_fatalities
     })
     return {crash_count: crash_count, fatality_count: fatality_count};
 }
