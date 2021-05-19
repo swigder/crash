@@ -10,7 +10,8 @@ BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
 CRASH_API = f'{BASE_URL}/crashes'
 DATA_API = f'{BASE_URL}/FARSData'
 
-WEB_DATA_BASE_DIR = 'web/data'
+WEB_BASE_DIR = 'web'
+DATA_BASE_DIR = 'data'
 
 
 def query_fars_api(api, params, force_cache_update=False):
@@ -97,18 +98,22 @@ def generate_web_data():
     grouped = df.groupby(
         df[['LATITUDE', 'LONGITUD']].agg(
             lambda ys: '_'.join([str(int(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
+    filenames = []
     for name, group in grouped:
-        with open(f'{WEB_DATA_BASE_DIR}/data-{name}.json', 'w') as outfile:
+        filename = f'{DATA_BASE_DIR}/data-{name}.json'
+        with open(f'{WEB_BASE_DIR}/{filename}', 'w') as outfile:
             json.dump(convert_to_web_data(group.reset_index()), outfile)
+        filenames.append(filename)
 
     df = df.reset_index()
     metadata = {
         'latlong_interval': latlong_interval,
         'min_year': int(df['CASEYEAR'].min()),
         'max_year': int(df['CASEYEAR'].max()),
+        'filenames': filenames,
     }
 
-    with open(f'{WEB_DATA_BASE_DIR}/file-metadata.json', 'w') as outfile:
+    with open(f'{WEB_BASE_DIR}/{DATA_BASE_DIR}/file-metadata.json', 'w') as outfile:
         json.dump(metadata, outfile)
 
 

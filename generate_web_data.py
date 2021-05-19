@@ -38,15 +38,12 @@ def get_num_fatalities(people):
 def convert_to_web_data(df):
     items = []
     for index, row in df.iterrows():
-        items.append({
-            'latlng': [row['LATITUDE'], row['LONGITUD']],
-            'data': {
-                'year': row['CASEYEAR'],
-                'case_id': row['ST_CASE'],
-                'harm': get_category(row['Person']),
-                'injuries': get_injuries(row['Person']),
-                'num_vehicles': row['Vehicle'],
-                'num_fatalities': get_num_fatalities(row['Person']),
-            },
-        })
-    return items
+        items.append(geojson.Feature(geometry=geojson.Point((row['LONGITUD'], row['LATITUDE'])), properties={
+            'year': row['CASEYEAR'],
+            'case_id': row['ST_CASE'],
+            'harm': get_category(row['Person']),
+            'injuries': get_injuries(row['Person']),
+            'num_vehicles': row['Vehicle'],
+            'num_fatalities': get_num_fatalities(row['Person']),
+        }))
+    return geojson.FeatureCollection(features=items)
