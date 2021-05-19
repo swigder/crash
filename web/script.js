@@ -33,13 +33,18 @@ map.addControl(
     })
 );
 
+let updateCount = debounce(function () {
+    window.dispatchEvent(new CustomEvent("count-updated", {
+        detail: getCounts()
+    }));
+}, 250)
+
 map.on('load', getNewData);
 map.on('moveend', getNewData);
 map.on('zoomend', getNewData);
 map.on('moveend', updateCount);
 map.on('zoomend', updateCount);
-
-// map.on('sourcedata', updateCount);  // TODO: figure out how to uncomment without crashing on intense zooms
+map.on('sourcedata', updateCount);
 
 function onMarkerClick(e) {
     $("#crash-tab").click()
@@ -116,12 +121,6 @@ function getCounts() {
         fatality_count += f.properties.num_fatalities
     });
     return {crash_count: crash_count, fatality_count: fatality_count};
-}
-
-function updateCount() {
-    window.dispatchEvent(new CustomEvent("count-updated", {
-        detail: getCounts()
-    }));
 }
 
 const filters = {
