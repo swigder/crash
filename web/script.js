@@ -38,8 +38,10 @@ map.on('zoomend', getNewData);
 
 function onMarkerClick(e) {
     $("#crash-tab").click()
+    let detail = e.features[0].properties
+    detail.injuries = JSON.parse(detail.injuries)  // TODO: figure out why this is turning into a string.
     window.dispatchEvent(new CustomEvent("items-load", {
-        detail: e.layer.options.data
+        detail: e.features[0].properties
     }));
 }
 
@@ -92,6 +94,8 @@ function getNewData() {
                     }
                 },
             });
+            map.on('click', filename, onMarkerClick);
+
             // updateCount();
         }
     }
@@ -100,10 +104,10 @@ function getNewData() {
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
-    allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
-        crash_count++
-        fatality_count += marker.options.data.num_fatalities
-    })
+    // allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
+    //     crash_count++
+    //     fatality_count += marker.options.data.num_fatalities
+    // })
     return {crash_count: crash_count, fatality_count: fatality_count};
 }
 
@@ -145,7 +149,7 @@ $("button").on('click', (event) => {
     } else {
         filters[filter].delete(value);
     }
-    clusterLayer.clearLayers()
-    clusterLayer.addLayers(allMarkers.filter(showFeature))
+    // clusterLayer.clearLayers()
+    // clusterLayer.addLayers(allMarkers.filter(showFeature))
     updateCount()
 });
