@@ -19,6 +19,7 @@ let map = new mapboxgl.Map({
     style: 'mapbox://styles/golmschenk/ckoss0cw40zbg17pen2nl0zv3',
     center: [-76.88, 39.00],
     zoom: 13,
+    minzoom: 9,
     maxZoom: 18,
 });
 
@@ -35,7 +36,10 @@ map.addControl(
 map.on('load', getNewData);
 map.on('moveend', getNewData);
 map.on('zoomend', getNewData);
-map.on('sourcedata', updateCount);
+map.on('moveend', updateCount);
+map.on('zoomend', updateCount);
+
+// map.on('sourcedata', updateCount);  // TODO: figure out how to uncomment without crashing on intense zooms
 
 function onMarkerClick(e) {
     $("#crash-tab").click()
@@ -101,7 +105,6 @@ function getNewData() {
             map.on('click', filename, onMarkerClick);
         }
     }
-    updateCount()
 }
 
 function getCounts() {
@@ -125,10 +128,6 @@ const filters = {
     "harm": new Set(["ped", "car", "bike", "other"])
 }
 
-function showFeature(marker) {
-    return marker.options.data && filters["harm"].has(marker.options.data.harm)
-}
-
 $("button").on('click', (event) => {
     let button = $(event.currentTarget)
     button.toggleClass('is-dark is-light is-selected');
@@ -139,7 +138,8 @@ $("button").on('click', (event) => {
     } else {
         filters[filter].delete(value);
     }
-    // clusterLayer.clearLayers()
-    // clusterLayer.addLayers(allMarkers.filter(showFeature))
+    loadedFiles.forEach(function (f) {
+        map.setFilter(f, ['in', ['get', 'harm'], ['literal', Array.from(filters["harm"])]]);
+    });
     updateCount()
 });
