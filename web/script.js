@@ -35,6 +35,7 @@ map.addControl(
 map.on('load', getNewData);
 map.on('moveend', getNewData);
 map.on('zoomend', getNewData);
+map.on('sourcedata', updateCount);
 
 function onMarkerClick(e) {
     $("#crash-tab").click()
@@ -55,6 +56,8 @@ function roundLatLongUp(latlong) {
     return Math.ceil(latlong / interval) * interval + interval;
 }
 
+let loadedFiles = new Set()
+
 function getNewData() {
     let bounds = map.getBounds()
     let south = roundLatLongDown(bounds.getSouth())
@@ -67,6 +70,7 @@ function getNewData() {
             if (map.getSource(filename) || !metadata.filenames.has(filename)) {
                 continue;
             }
+            loadedFiles.add(filename)
             map.addSource(filename, {
                 'type': 'geojson',
                 'data': filename,
@@ -95,19 +99,19 @@ function getNewData() {
                 },
             });
             map.on('click', filename, onMarkerClick);
-
-            // updateCount();
         }
     }
+    updateCount()
 }
 
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
-    // allMarkers.filter(marker => map.getBounds().contains(marker.getLatLng()) && showFeature(marker)).forEach(function (marker) {
-    //     crash_count++
-    //     fatality_count += marker.options.data.num_fatalities
-    // })
+    let features = map.queryRenderedFeatures({layers: Array.from(loadedFiles)});
+    features.forEach(function (f) {
+        crash_count++
+        fatality_count += f.properties.num_fatalities
+    });
     return {crash_count: crash_count, fatality_count: fatality_count};
 }
 
@@ -124,20 +128,6 @@ const filters = {
 function showFeature(marker) {
     return marker.options.data && filters["harm"].has(marker.options.data.harm)
 }
-
-$('#location-input').on('keydown', function (event) {
-    if (event.key === "Enter") {
-        $.getJSON(`https://api.mapbox.com/geocoding/v5/mapbox.places/${event.target.value}.json`, {
-            access_token: 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g',
-            limit: 1
-        }, function (data) {
-            let result = data.features[0]
-            let longLat = result.center
-            map.setView([longLat[1], longLat[0]], 13);
-            event.target.value = result.place_name
-        })
-    }
-});
 
 $("button").on('click', (event) => {
     let button = $(event.currentTarget)
