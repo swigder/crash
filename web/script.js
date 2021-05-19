@@ -5,6 +5,7 @@ $.ajax({
     dataType: "json",
     success: data => {
         metadata = data;
+        metadata.filenames = new Set(metadata.filenames)
         window.dispatchEvent(new CustomEvent("metadata-load", {
             detail: metadata
         }))
@@ -61,7 +62,7 @@ function getNewData() {
     for (let lat = south; lat < north; lat += metadata.latlong_interval) {
         for (let long = west; long < east; long += metadata.latlong_interval) {
             let filename = `data/data-${lat}_${long}.json`
-            if (map.getSource(filename)) {
+            if (map.getSource(filename) || !metadata.filenames.has(filename)) {
                 continue;
             }
             map.addSource(filename, {
