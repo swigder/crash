@@ -108,6 +108,7 @@ function getNewData() {
                 },
             });
             map.on('click', filename, onMarkerClick);
+            setFilter(filename);
         }
     }
 }
@@ -127,9 +128,13 @@ const filters = {
     "harm": new Set(["ped", "car", "bike", "other"])
 }
 
+function setFilter(layer) {
+    map.setFilter(layer, ['in', ['get', 'harm'], ['literal', Array.from(filters["harm"])]]);
+}
+
 $("button").on('click', (event) => {
     let button = $(event.currentTarget)
-    button.toggleClass('is-dark is-light is-selected');
+    button.toggleClass('is-selected');
     let filter = button.attr("data-filter-type")
     let value = button.attr("data-filter-value")
     if (button.hasClass('is-selected')) {
@@ -138,7 +143,7 @@ $("button").on('click', (event) => {
         filters[filter].delete(value);
     }
     loadedFiles.forEach(function (f) {
-        map.setFilter(f, ['in', ['get', 'harm'], ['literal', Array.from(filters["harm"])]]);
+        setFilter(f)
     });
     updateCount()
 });

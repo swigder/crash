@@ -10,27 +10,6 @@ html, body {
     height: 75vh;
 }
 
-.circle {
-    border-radius: 50%;
-    text-align: center;
-}
-
-.bike {
-    background: rgba(255, 110, 0, 0.7);
-}
-
-.car {
-    background: rgba(168, 166, 50, 0.7);
-}
-
-.ped {
-    background: rgba(168, 50, 50, 0.7);
-}
-
-.other {
-    background: rgba(0, 0, 0, 0.7);
-}
-
 #tabs-with-content .tabs:not(:last-child) {
   margin-bottom: 0;
 }
@@ -42,4 +21,12 @@ html, body {
 
 #tabs-with-content .tab-content.is-active {
   display: block;
+}
+
+.check {
+    visibility: hidden;
+}
+
+.is-selected .check {
+    visibility: visible;
 }
