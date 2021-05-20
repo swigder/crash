@@ -19,7 +19,7 @@ let map = new mapboxgl.Map({
     style: 'mapbox://styles/golmschenk/ckoss0cw40zbg17pen2nl0zv3',
     center: [-76.88, 39.00],
     zoom: 13,
-    minzoom: 9,
+    minZoom: 2,
     maxZoom: 18,
 });
 
@@ -121,7 +121,7 @@ function getNewData() {
                         '#3bb2d0',
                     ],
                     'circle-radius': {
-                        stops: [[4, 1], [7, 3], [10, 6], [13, 10], [16, 20]]
+                        stops: [[4, 1], [10, 3], [13, 5], [16, 8]]
                     }
                 },
             });
