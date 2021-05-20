@@ -46,13 +46,31 @@ map.on('moveend', updateCount);
 map.on('zoomend', updateCount);
 map.on('sourcedata', updateCount);
 
+let fullData = new Map()
+
 function onMarkerClick(e) {
-    $("#crash-tab").click()
-    let detail = e.features[0].properties
-    detail.injuries = JSON.parse(detail.injuries)  // TODO: figure out why this is turning into a string.
+    let properties = new Map(Object.entries(e.features[0].properties))
+    if (fullData.has(properties.get("id"))) {
+        dispatchDetails(properties)
+    } else {
+        let url = `data/data-${roundLatLongDown(e.lngLat.lat)}_${roundLatLongDown(e.lngLat.lng)}-full.json`
+        $.ajax({
+            url: url,
+            properties: properties,
+            success: function (data) {
+                mergeMaps(fullData, data)
+                dispatchDetails(this.properties);
+            }
+        });
+    }
+}
+
+function dispatchDetails(properties) {
+    mergeMaps(properties, fullData.get(properties.get("id")))
     window.dispatchEvent(new CustomEvent("items-load", {
-        detail: e.features[0].properties
+        detail: Object.fromEntries(properties),
     }));
+    $("#crash-tab").click()
 }
 
 function roundLatLongDown(latlong) {

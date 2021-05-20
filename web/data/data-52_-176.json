@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-174.204181, 52.222664]}, "properties": {"id": "2016-2-20026", "year": 2016, "harm": "car", "num_fatalities": 3}}]}

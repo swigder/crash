@@ -1,1 +1,0 @@
-{"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-160.434492, 66.970956]}, "properties": {"year": 2014, "case_id": 20012, "harm": "ped", "injuries": [{"severity": "Fatal Injury (K)", "person": "Pedestrian"}, {"severity": "No Apparent Injury (O)", "person": "Driver"}], "num_vehicles": 1, "num_fatalities": 1}}]}

@@ -1,5 +1,6 @@
 import glob
 import json
+import math
 
 import pandas as pd
 import requests
@@ -88,8 +89,8 @@ def merge_data(year):
 def generate_web_data():
     all_pickles = glob.glob('data/df-*.pkl')
     dfs = []
-    for filename in all_pickles:
-        df = pd.read_pickle(filename)
+    for filename_geojson in all_pickles:
+        df = pd.read_pickle(filename_geojson)
         dfs.append(df)
     df = pd.concat(dfs, axis=0)
 
@@ -97,13 +98,17 @@ def generate_web_data():
 
     grouped = df.groupby(
         df[['LATITUDE', 'LONGITUD']].agg(
-            lambda ys: '_'.join([str(int(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
+            lambda ys: '_'.join([str(math.floor(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
     filenames = []
     for name, group in grouped:
-        filename = f'{DATA_BASE_DIR}/data-{name}.json'
-        with open(f'{WEB_BASE_DIR}/{filename}', 'w') as outfile:
-            json.dump(convert_to_web_data(group.reset_index()), outfile)
-        filenames.append(filename)
+        geojson, full = convert_to_web_data(group.reset_index())
+        filename_geojson = f'{DATA_BASE_DIR}/data-{name}.json'
+        with open(f'{WEB_BASE_DIR}/{filename_geojson}', 'w') as outfile:
+            json.dump(geojson, outfile)
+        filenames.append(filename_geojson)
+        filename_full = f'{DATA_BASE_DIR}/data-{name}-full.json'
+        with open(f'{WEB_BASE_DIR}/{filename_full}', 'w') as outfile:
+            json.dump(full, outfile)
 
     df = df.reset_index()
     metadata = {

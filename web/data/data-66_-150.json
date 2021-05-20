@@ -1,1 +1,0 @@
-{"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-150.500514, 66.897483]}, "properties": {"year": 2014, "case_id": 20065, "harm": "car", "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}], "num_vehicles": 1, "num_fatalities": 1}}]}
