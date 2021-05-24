@@ -65,6 +65,34 @@ function onMarkerClick(e) {
     }
 }
 
+let currentHover = null
+
+function onMarkerHover(e) {
+    map.getCanvas().style.cursor = 'pointer';
+
+    let newHover = {
+        id: e.features[0].id,
+        source: e.features[0].layer.source,
+    }
+
+    if (!currentHover || currentHover.id !== newHover.id || currentHover.source !== newHover.source) {
+        if (currentHover) {
+            map.setFeatureState(currentHover, {hover: false});
+        }
+        currentHover = newHover;
+        map.setFeatureState(newHover, {hover: true});
+    }
+}
+
+function onMarkerUnhover(e) {
+    map.getCanvas().style.cursor = '';
+
+    if (currentHover) {
+        map.setFeatureState(currentHover, {hover: false});
+    }
+    currentHover = null;
+}
+
 function dispatchDetails(properties) {
     mergeMaps(properties, fullData.get(properties.get("id")))
     window.dispatchEvent(new CustomEvent("items-load", {
@@ -80,7 +108,7 @@ function roundLatLongDown(latlong) {
 
 function roundLatLongUp(latlong) {
     let interval = metadata.latlong_interval
-    return Math.ceil(latlong / interval) * interval + interval;
+    return Math.ceil(latlong / interval) * interval;
 }
 
 let loadedFiles = new Set()
@@ -102,12 +130,14 @@ function getNewData() {
                 'type': 'geojson',
                 'data': filename,
                 'cluster': false,
+                'generateId': true,
             });
             map.addLayer({
                 id: filename,
                 type: 'circle',
                 source: filename,
                 'paint': {
+                    'circle-opacity': .8,
                     'circle-color': [
                         'match',
                         ['get', 'harm'],
@@ -121,11 +151,31 @@ function getNewData() {
                         '#3bb2d0',
                     ],
                     'circle-radius': {
-                        stops: [[4, 1], [10, 3], [13, 5], [16, 8]]
-                    }
+                        stops: [[4, 1], [10, 3], [13, 6], [16, 8]]
+                    },
+                    'circle-stroke-width': [
+                        'case',
+                        ['boolean', ['feature-state', 'hover'], false,],
+                        2,
+                        0,
+                    ],
+                    'circle-stroke-color': [
+                        'match',
+                        ['get', 'harm'],
+                        'bike',
+                        '#fbb03b',
+                        'car',
+                        '#223b53',
+                        'ped',
+                        '#e55e5e',
+                        /* other */
+                        '#3bb2d0',
+                    ],
                 },
             });
             map.on('click', filename, onMarkerClick);
+            map.on('mousemove', filename, onMarkerHover);
+            map.on('mouseleave', filename, onMarkerUnhover);
             setFilter(filename);
         }
     }
