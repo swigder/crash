@@ -95,6 +95,8 @@ function onMarkerUnhover(e) {
 
 function dispatchDetails(properties) {
     mergeMaps(properties, fullData.get(properties.get("id")))
+    let url_params = properties.get('id').split('-')
+    properties.set('url', `https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails?stateCase=${url_params[2]}&caseYear=${url_params[0]}&state=${url_params[1]}&format=xml`)
     window.dispatchEvent(new CustomEvent("items-load", {
         detail: Object.fromEntries(properties),
     }));
