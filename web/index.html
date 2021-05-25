@@ -61,13 +61,15 @@
                             <button data-filter-type="harm" data-filter-value="ped" class="button is-light is-selected">
                                 <span class="check">✔️️</span> Pedestrian
                             </button>
-                            <button data-filter-type="harm" data-filter-value="bike" class="button is-light is-selected">
+                            <button data-filter-type="harm" data-filter-value="bike"
+                                    class="button is-light is-selected">
                                 <span class="check">✔️️</span> Cyclist
                             </button>
                             <button data-filter-type="harm" data-filter-value="car" class="button is-light is-selected">
                                 <span class="check">✔️️</span> Person in motor vehicle
                             </button>
-                            <button data-filter-type="harm" data-filter-value="other" class="button is-light is-selected">
+                            <button data-filter-type="harm" data-filter-value="other"
+                                    class="button is-light is-selected">
                                 <span class="check">✔️</span> Other
                             </button>
                         </div>
@@ -102,11 +104,30 @@
                                         <td x-text="detail.year"></td>
                                     </tr>
                                     <tr>
+                                        <th class="has-text-right">Fatalities</th>
+                                        <td>
+                                            <template x-for="fatality in detail.fatalities" :key="fatality">
+                                                <dl><span x-text="fatality"></span>
+                                                </dl>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th class="has-text-right">Injuries</th>
                                         <td>
-                                            <template x-for="injury in detail.injuries" :key="injury">
-                                                <dl><span x-text="injury.person"></span> - <span
-                                                        x-text="injury.severity"></span>
+                                            <template x-if="detail.injuries" x-for="injury in detail.injuries"
+                                                      :key="injury">
+                                                <dl><span x-text="injury.person"></span>
+                                                </dl>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="has-text-right">Others</th>
+                                        <td>
+                                            <template x-if="detail.others" x-for="other in detail.others" :key="other">
+                                                <dl><span x-text="other.person"></span> - <span
+                                                        x-text="other.severity"></span>
                                                 </dl>
                                             </template>
                                         </td>

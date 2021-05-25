@@ -1,1 +1,1 @@
-{"2015-2-20017": {"year": 2015, "num_vehicles": 1, "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}]}}
+{"2015-2-20017": {"year": 2015, "num_vehicles": 1, "fatalities": ["Driver"]}}

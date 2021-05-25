@@ -1,1 +1,1 @@
-{"2014-2-20047": {"year": 2014, "num_vehicles": 1, "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}]}, "2011-2-20050": {"year": 2011, "num_vehicles": 1, "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}, {"severity": "Non-incapacitating Evident Injury (B)", "person": "Passenger"}]}}
+{"2014-2-20047": {"year": 2014, "num_vehicles": 1, "fatalities": ["Driver"]}, "2011-2-20050": {"year": 2011, "num_vehicles": 1, "fatalities": ["Driver"], "injuries": [{"severity": "Suspected minor injury", "person": "Passenger"}]}}

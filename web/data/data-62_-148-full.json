@@ -1,1 +1,1 @@
-{"2017-2-20047": {"year": 2017, "num_vehicles": 1, "injuries": [{"severity": "Fatal Injury (K)", "person": "Driver"}, {"severity": "No Apparent Injury (O)", "person": "Passenger"}]}}
+{"2017-2-20047": {"year": 2017, "num_vehicles": 1, "fatalities": ["Driver"], "others": [{"severity": "No apparent injury", "person": "Passenger"}]}}

@@ -1,1 +1,1 @@
-{"2018-2-20028": {"year": 2018, "num_vehicles": 1, "injuries": [{"severity": "Suspected Minor Injury (B)", "person": "Driver"}, {"severity": "Fatal Injury (K)", "person": "Passenger"}, {"severity": "Suspected Minor Injury (B)", "person": "Passenger"}]}}
+{"2018-2-20028": {"year": 2018, "num_vehicles": 1, "injuries": [{"severity": "Suspected minor injury", "person": "Driver"}, {"severity": "Suspected minor injury", "person": "Passenger"}], "fatalities": ["Passenger"]}}
