@@ -51,3 +51,10 @@ html, body {
   height: 10px;
   margin-right: 5px;
 }
+
+.mapboxgl-ctrl-scale {
+    border-left: none;
+    border-right: none;
+    border-bottom-width: 1px;
+    background-color: hsla(0, 0%, 100%, .5);
+}

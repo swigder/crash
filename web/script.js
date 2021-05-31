@@ -32,6 +32,13 @@ map.addControl(
         },
     })
 );
+map.addControl(
+    new mapboxgl.ScaleControl({
+        unit: 'imperial',
+    })
+);
+map.dragRotate.disable();
+map.touchZoomRotate.disableRotation();
 
 let updateCount = debounce(function () {
     window.dispatchEvent(new CustomEvent("count-updated", {
