@@ -32,7 +32,11 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-K0V9G9G1VX"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
         gtag('js', new Date());
         gtag('config', 'G-K0V9G9G1VX');
     </script>
@@ -54,7 +58,27 @@
 
 <div id="main">
     <div class="columns card">
-        <div id="map" class="column is-three-quarters"></div>
+        <div id="map-container" class="column is-three-quarters">
+            <div id="map"></div>
+            <div class='map-overlay mapboxgl-ctrl-bottom-right' id='legend'>
+                <div>
+                    <span class="legend-key" style="background-color: #e55e5e"></span>
+                    <span>Pedestrian</span>
+                </div>
+                <div>
+                    <span class="legend-key" style="background-color: #fbb03b"></span>
+                    <span>Cyclist</span>
+                </div>
+                <div>
+                    <span class="legend-key" style="background-color: #223b53"></span>
+                    <span>Person in motor vehicle</span>
+                </div>
+                <div>
+                    <span class="legend-key" style="background-color: #3bb2d0"></span>
+                    <span>Other</span>
+                </div>
+            </div>
+        </div>
 
         <div class="column">
             <div id="tabs-with-content">
