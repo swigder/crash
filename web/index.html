@@ -49,7 +49,7 @@
 <section class="section">
     <div class="container">
         <h1 class="title" x-data="{detail: metadata}" x-on:metadata-load.window="detail = $event.detail">
-            Traffic fatalities
+            Traffic fatalities in the United States
             <template x-if="detail"><span>(<span x-text="detail.min_year"></span> - <span
                     x-text="detail.max_year"></span>)</span></template>
         </h1>
