@@ -1,1 +1,1 @@
-{"2014-2-20012": {"year": 2014, "num_vehicles": 1, "fatalities": ["Pedestrian"], "others": [{"severity": "No apparent injury", "person": "Driver"}]}}
+{"2014-2-20012": {"year": 2014, "num_vehicles": 1, "fatalities": [{"person": "Pedestrian", "age": 85}], "others": [{"person": "Driver", "age": 88, "severity": "No apparent injury"}]}}

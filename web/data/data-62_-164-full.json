@@ -1,1 +1,1 @@
-{"2014-2-20047": {"year": 2014, "num_vehicles": 1, "fatalities": ["Driver"]}, "2011-2-20050": {"year": 2011, "num_vehicles": 1, "fatalities": ["Driver"], "injuries": [{"severity": "Suspected minor injury", "person": "Passenger"}]}}
+{"2014-2-20047": {"year": 2014, "num_vehicles": 1, "fatalities": [{"person": "Driver", "age": 21}]}, "2011-2-20050": {"year": 2011, "num_vehicles": 1, "fatalities": [{"person": "Driver", "age": 21}], "injuries": [{"person": "Passenger", "age": 22, "severity": "Suspected minor injury"}]}}

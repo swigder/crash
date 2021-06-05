@@ -41,7 +41,7 @@
         gtag('config', 'G-K0V9G9G1VX');
     </script>
 
-    <title>No More Traffic Deaths</title>
+    <title>Too Many Traffic Deaths</title>
 </head>
 
 <body>
@@ -140,7 +140,7 @@
                                         <th class="has-text-right">Fatalities</th>
                                         <td>
                                             <template x-for="fatality in detail.fatalities" :key="fatality">
-                                                <dl><span x-text="fatality"></span>
+                                                <dl><span x-text="fatality.person"></span>, age <span x-text="fatality.age"></span>
                                                 </dl>
                                             </template>
                                         </td>
@@ -159,8 +159,7 @@
                                         <th class="has-text-right">Others</th>
                                         <td>
                                             <template x-if="detail.others" x-for="other in detail.others" :key="other">
-                                                <dl><span x-text="other.person"></span> - <span
-                                                        x-text="other.severity"></span>
+                                                <dl><span x-text="other.person"></span>
                                                 </dl>
                                             </template>
                                         </td>
@@ -184,10 +183,10 @@
 
     <div class="content is-small">
         <p>
-            Data source: United
+            Data: United
             States National Highway Traffic Safety Administration, <a
                 href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars">Fatality Analysis
-            Reporting System</a>
+            Reporting System</a>. 2020 data will be released in December 2021.
         </p>
     </div>
 </div>

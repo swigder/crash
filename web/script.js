@@ -30,6 +30,8 @@ map.addControl(
         flyTo: {
             duration: 0,
         },
+        placeholder: 'Jump to location',
+        country: 'US',
     })
 );
 map.addControl(

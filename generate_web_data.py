@@ -1,3 +1,4 @@
+import math
 from collections import namedtuple, defaultdict
 
 import geojson
@@ -68,10 +69,9 @@ def get_injuries(people):
     for p in people:
         injury_type = get_injury_type(p)
         person_type = get_person_type(p).name
+        info = {'person': person_type, 'age': p['AGE'] if 'AGE' in p and p['AGE'] != 999 else 'unknown'}
         if len(INJURY_TYPE_GROUPS[injury_type.category]) > 1:
-            info = {'severity': injury_type.name, 'person': person_type}
-        else:
-            info = person_type
+            info['severity'] = injury_type.name
         injuries[injury_type.category].append(info)
     return injuries
 
@@ -94,7 +94,7 @@ def convert_to_web_data(df):
             'id': case_id,
             'year': row['CASEYEAR'],
             'harm': get_category(row['Person']),
-            'num_fatalities': get_num_fatalities(row['Person']),
+            'num_fatalities': int(row['FATALS']) if not math.isnan(row['FATALS']) else get_num_fatalities(row['Person']),
         }))
 
         details = {

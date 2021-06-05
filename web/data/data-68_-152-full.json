@@ -1,1 +1,1 @@
-{"2017-2-20071": {"year": 2017, "num_vehicles": 1, "fatalities": ["Driver"]}}
+{"2017-2-20071": {"year": 2017, "num_vehicles": 1, "fatalities": [{"person": "Driver", "age": 77}]}}
