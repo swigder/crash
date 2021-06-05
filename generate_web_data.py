@@ -69,7 +69,7 @@ def get_injuries(people):
     for p in people:
         injury_type = get_injury_type(p)
         person_type = get_person_type(p).name
-        info = {'person': person_type, 'age': p['AGE'] if 'AGE' in p and p['AGE'] != 999 else 'unknown'}
+        info = {'person': person_type, 'age': p['AGE'] if 'AGE' in p and p['AGE'] < 900 else 'unknown'}
         if len(INJURY_TYPE_GROUPS[injury_type.category]) > 1:
             info['severity'] = injury_type.name
         injuries[injury_type.category].append(info)
