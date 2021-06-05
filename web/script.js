@@ -31,7 +31,8 @@ map.addControl(
             duration: 0,
         },
         placeholder: 'Jump to location',
-        country: 'US',
+        countries: 'US',
+        marker: false,
     })
 );
 map.addControl(
@@ -47,17 +48,25 @@ let updateCount = debounce(function () {
         detail: getCounts()
     }));
 }, 250)
+let mapChanged = debounce(function () {
+    updateCount();
+    getNewData();
+    if (clickedLocation && (!map.getBounds().contains(clickedLocation) || map.getZoom() < 10)) {
+        clickedLocation = null
+        $("#map-tab").click();
+    }
+}, 250)
 
 map.on('load', getNewData);
-map.on('moveend', getNewData);
-map.on('zoomend', getNewData);
-map.on('moveend', updateCount);
-map.on('zoomend', updateCount);
+map.on('moveend', mapChanged);
+map.on('zoomend', mapChanged);
 map.on('sourcedata', updateCount);
 
 let fullData = new Map()
+let clickedLocation = null
 
 function onMarkerClick(e) {
+    clickedLocation = e.lngLat
     let properties = new Map(Object.entries(e.features[0].properties))
     if (fullData.has(properties.get("id"))) {
         dispatchDetails(properties)
