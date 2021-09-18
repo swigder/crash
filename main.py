@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from api_data import ApiDataInterface
-from fars import COLUMN_NAMES
+from fars import COLUMN_NAMES, FARS_DATA_DESCRIPTION
 from fars import FarsRowDataGetter
 from web_data import ColumnNames, WebDataGenerator
 
@@ -111,7 +111,9 @@ class FarsApiDataInterface(ApiDataInterface):
 def generate_web_data():
     df = FarsApiDataInterface().read_data()
 
-    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=COLUMN_NAMES, state='fars')
+    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(),
+                                          column_names=COLUMN_NAMES,
+                                          data_description=FARS_DATA_DESCRIPTION)
     web_data_generator.iterate_and_save(df, latlong_interval=2)
 
 

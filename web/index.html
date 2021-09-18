@@ -42,7 +42,7 @@
 <section class="section">
     <div class="container">
         <h1 class="title" x-data="{detail: metadata}" x-on:metadata-load.window="detail = $event.detail">
-            Traffic fatalities in the United States
+            <span x-text="detail.title"></span>
             <template x-if="detail"><span>(<span x-text="detail.min_year"></span> - <span
                     x-text="detail.max_year"></span>)</span></template>
         </h1>
@@ -174,12 +174,8 @@
         </div>
     </div>
 
-    <div class="content is-small">
-        <p>
-            Data: United
-            States National Highway Traffic Safety Administration, <a
-                href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars">Fatality Analysis
-            Reporting System</a>. 2020 data will be released in December 2021.
+    <div class="content is-small" x-data="{detail: metadata}" x-on:metadata-load.window="detail = $event.detail">
+        <p> Data: <span x-html="detail.source"></span>
         </p>
     </div>
 </div>

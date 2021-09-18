@@ -16,6 +16,13 @@ class ColumnNames:
     year: str = 'YEAR'
 
 
+@dataclass
+class DataDescription:
+    title: str
+    source: str
+    state: str
+
+
 class RowDataGetter:
     @staticmethod
     def item_id(row):
@@ -39,11 +46,11 @@ class RowDataGetter:
 
 
 class WebDataGenerator:
-    def __init__(self, row_data_getter: RowDataGetter, column_names: ColumnNames, state: str = None):
+    def __init__(self, row_data_getter: RowDataGetter, column_names: ColumnNames, data_description: DataDescription):
         self.column_names = column_names
         self.row_data_getter = row_data_getter
-        self.state = state
-        self.data_dir = DATA_BASE_DIR + (f'/{state}' if state else '')
+        self.data_description = data_description
+        self.data_dir = f'data/{data_description.state}'
 
     def iterate_and_save(self, df, latlong_interval: int = 1):
         grouped = df.groupby(
@@ -87,6 +94,8 @@ class WebDataGenerator:
         for col in [self.column_names.year]:
             df[col] = pd.to_numeric(df[col], errors='coerce')
         metadata = {
+            'title': self.data_description.title,
+            'source': self.data_description.source,
             'latlong_interval': latlong_interval,
             'min_year': int(df[self.column_names.year].min()),
             'max_year': int(df[self.column_names.year].max()),

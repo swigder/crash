@@ -1,7 +1,7 @@
 import pandas as pd
 
 from api_data import ApiDataInterface
-from web_data import ColumnNames, WebDataGenerator, RowDataGetter
+from web_data import ColumnNames, WebDataGenerator, RowDataGetter, DataDescription
 
 WEB_BASE_DIR = 'web'
 DATA_BASE_DIR = 'data/maryland'
@@ -14,6 +14,14 @@ HARM = {
 }
 
 COLUMN_NAMES = ColumnNames(latitude='LATITUDE', longitude='LONGITUDE', year='YEAR')
+
+
+MARYLAND_DATA_DESCRIPTION = DataDescription(
+    title='Crashes with Injuries or Fatalities in Maryland',
+    source='Maryland State Police <a href="https://opendata.maryland.gov/Public-Safety/Maryland-Statewide-Vehicle'
+           '-Crashes/65du-s3qu">Maryland Statewide Vehicle Crashes</a>. Data is updated quarterly.',
+    state='maryland',
+)
 
 
 class MarylandApiDataInterface(ApiDataInterface):
@@ -48,7 +56,7 @@ def generate_web_data():
 
     web_data_generator = WebDataGenerator(row_data_getter=MarylandRowDataGetter(),
                                           column_names=COLUMN_NAMES,
-                                          state='maryland')
+                                          data_description=MARYLAND_DATA_DESCRIPTION)
     web_data_generator.iterate_and_save(df, latlong_interval=2)
 
 
