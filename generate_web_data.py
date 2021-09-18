@@ -1,7 +1,7 @@
 import math
 from collections import namedtuple, defaultdict
 
-import geojson
+from web_data import RowDataGetter
 
 PersonType = namedtuple('PersonType', ['name', 'category'])
 InjuryType = namedtuple('InjuryType', ['name', 'category', 'number'])
@@ -84,24 +84,24 @@ def get_num_fatalities(people):
     return num_fatalities
 
 
-def convert_to_web_data(df):
-    geojson_items = []
-    items_details = {}
-    for index, row in df.iterrows():
-        case_id = f'{row["CASEYEAR"]}-{row["STATE"]}-{row["ST_CASE"]}'
+class FarsRowDataGetter(RowDataGetter):
+    @staticmethod
+    def item_id(row):
+        return f'{row["CASEYEAR"]}-{row["STATE"]}-{row["ST_CASE"]}'
 
-        geojson_items.append(geojson.Feature(geometry=geojson.Point((row['LONGITUD'], row['LATITUDE'])), properties={
-            'id': case_id,
-            'year': row['CASEYEAR'],
-            'harm': get_category(row['Person']),
-            'num_fatalities': int(row['FATALS']) if not math.isnan(row['FATALS']) else get_num_fatalities(row['Person']),
-        }))
+    @staticmethod
+    def category(row):
+        return get_category(row['Person'])
 
-        details = {
-            'year': row['CASEYEAR'],
-            'num_vehicles': row['Vehicle'],
-        }
-        details.update(get_injuries(row['Person']))
-        items_details[case_id] = details
+    @staticmethod
+    def num_fatalities(row):
+        return int(row['FATALS']) if not math.isnan(row['FATALS']) else get_num_fatalities(row['Person'])
 
-    return geojson.FeatureCollection(features=geojson_items), items_details
+    @staticmethod
+    def num_vehicles(row):
+        return row['Vehicle']
+
+    @staticmethod
+    def injuries(row):
+        return get_injuries(row['Person'])
+

@@ -1,18 +1,15 @@
 import glob
 import json
-import math
 
 import pandas as pd
 import requests
 
-from generate_web_data import convert_to_web_data
+from generate_web_data import FarsRowDataGetter
+from web_data import ColumnNames, WebDataGenerator
 
 BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
 CRASH_API = f'{BASE_URL}/crashes'
 DATA_API = f'{BASE_URL}/FARSData'
-
-WEB_BASE_DIR = 'web'
-DATA_BASE_DIR = 'data'
 
 
 def query_fars_api(api, params, force_cache_update=False):
@@ -101,35 +98,9 @@ def generate_web_data():
         dfs.append(df)
     df = pd.concat(dfs, axis=0)
 
-    latlong_interval = 2
-
-    grouped = df.groupby(
-        df[['LATITUDE', 'LONGITUD']].agg(
-            lambda ys: '_'.join([str(math.floor(y / latlong_interval) * latlong_interval) for y in ys]), axis=1))
-    filenames = []
-    for name, group in grouped:
-        groupdf = group.reset_index()
-        geojson, full = convert_to_web_data(groupdf)
-        filename_geojson = f'{DATA_BASE_DIR}/data-{name}.json'
-        with open(f'{WEB_BASE_DIR}/{filename_geojson}', 'w') as outfile:
-            json.dump(geojson, outfile)
-        filenames.append(filename_geojson)
-        filename_full = f'{DATA_BASE_DIR}/data-{name}-full.json'
-        with open(f'{WEB_BASE_DIR}/{filename_full}', 'w') as outfile:
-            json.dump(full, outfile)
-
-    df = df.reset_index()
-    for col in ['CASEYEAR']:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-    metadata = {
-        'latlong_interval': latlong_interval,
-        'min_year': int(df['CASEYEAR'].min()),
-        'max_year': int(df['CASEYEAR'].max()),
-        'filenames': filenames,
-    }
-
-    with open(f'{WEB_BASE_DIR}/{DATA_BASE_DIR}/file-metadata.json', 'w') as outfile:
-        json.dump(metadata, outfile)
+    column_names = ColumnNames(latitude='LATITUDE', longitude='LONGITUD', year='CASEYEAR')
+    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=column_names)
+    web_data_generator.iterate_and_save(df, latlong_interval=2)
 
 
 if __name__ == '__main__':
@@ -147,3 +118,4 @@ if __name__ == '__main__':
         pass
     print('Generating web data...')
     generate_web_data()
+    print('Done.')
