@@ -111,7 +111,7 @@ class FarsApiDataInterface(ApiDataInterface):
 def generate_web_data():
     df = FarsApiDataInterface().read_data()
 
-    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=COLUMN_NAMES)
+    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=COLUMN_NAMES, state='fars')
     web_data_generator.iterate_and_save(df, latlong_interval=2)
 
 

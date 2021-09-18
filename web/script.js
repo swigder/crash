@@ -1,6 +1,6 @@
 let metadata = {}
 $.ajax({
-    url: "data/file-metadata.json",
+    url: "data/fars/file-metadata.json",
     async: false,
     dataType: "json",
     success: data => {
@@ -71,7 +71,7 @@ function onMarkerClick(e) {
     if (fullData.has(properties.get("id"))) {
         dispatchDetails(properties)
     } else {
-        let url = `data/data-${roundLatLongDown(e.lngLat.lat)}_${roundLatLongDown(e.lngLat.lng)}-full.json`
+        let url = `data/fars/data-${roundLatLongDown(e.lngLat.lat)}_${roundLatLongDown(e.lngLat.lng)}-full.json`
         $.ajax({
             url: url,
             properties: properties,
@@ -141,7 +141,7 @@ function getNewData() {
     let east = roundLatLongUp(bounds.getEast())
     for (let lat = south; lat < north; lat += metadata.latlong_interval) {
         for (let long = west; long < east; long += metadata.latlong_interval) {
-            let filename = `data/data-${lat}_${long}.json`
+            let filename = `data/fars/data-${lat}_${long}.json`
             if (map.getSource(filename) || !metadata.filenames.has(filename)) {
                 continue;
             }
