@@ -4,7 +4,9 @@ import json
 import pandas as pd
 import requests
 
-from generate_web_data import FarsRowDataGetter
+from api_data import ApiDataInterface
+from fars import COLUMN_NAMES
+from fars import FarsRowDataGetter
 from web_data import ColumnNames, WebDataGenerator
 
 BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
@@ -90,16 +92,26 @@ def merge_data(year):
     df.to_pickle(f'data/df-{year}.pkl')
 
 
-def generate_web_data():
-    all_pickles = glob.glob('data/df-*.pkl')
-    dfs = []
-    for filename_geojson in all_pickles:
-        df = pd.read_pickle(filename_geojson)
-        dfs.append(df)
-    df = pd.concat(dfs, axis=0)
+class FarsApiDataInterface(ApiDataInterface):
+    def convert_to_df(self):
+        pass
 
-    column_names = ColumnNames(latitude='LATITUDE', longitude='LONGITUD', year='CASEYEAR')
-    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=column_names)
+    def filter_data(self):
+        pass
+
+    def read_data(self):
+        all_pickles = glob.glob('data/df-*.pkl')
+        dfs = []
+        for filename_geojson in all_pickles:
+            df = pd.read_pickle(filename_geojson)
+            dfs.append(df)
+        return pd.concat(dfs, axis=0)
+
+
+def generate_web_data():
+    df = FarsApiDataInterface().read_data()
+
+    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(), column_names=COLUMN_NAMES)
     web_data_generator.iterate_and_save(df, latlong_interval=2)
 
 

@@ -1,10 +1,12 @@
 import math
 from collections import namedtuple, defaultdict
 
-from web_data import RowDataGetter
+from web_data import ColumnNames, RowDataGetter
 
 PersonType = namedtuple('PersonType', ['name', 'category'])
 InjuryType = namedtuple('InjuryType', ['name', 'category', 'number'])
+
+COLUMN_NAMES = ColumnNames(latitude='LATITUDE', longitude='LONGITUD', year='CASEYEAR')
 
 PER_TYPE = {
     1: PersonType('Driver', 'car'),
@@ -104,4 +106,3 @@ class FarsRowDataGetter(RowDataGetter):
     @staticmethod
     def injuries(row):
         return get_injuries(row['Person'])
-
