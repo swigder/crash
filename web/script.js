@@ -51,7 +51,7 @@ let updateCount = debounce(function () {
 let mapChanged = debounce(function () {
     updateCount();
     getNewData();
-    if (clickedLocation && (!map.getBounds().contains(clickedLocation) || map.getZoom() < 10)) {
+    if (clickedLocation && (!map.getBounds().contains(clickedLocation) || map.getZoom() < 8)) {
         clickedLocation = null
         $("#map-tab").click();
     }
@@ -115,7 +115,7 @@ function dispatchDetails(properties) {
     mergeMaps(properties, fullData.get(properties.get("id")))
     let url_params = properties.get('id').split('-')
     properties.set('url', `https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails?stateCase=${url_params[2]}&caseYear=${url_params[0]}&state=${url_params[1]}&format=xml`)
-    window.dispatchEvent(new CustomEvent("items-load", {
+    window.dispatchEvent(new CustomEvent("crash-data", {
         detail: Object.fromEntries(properties),
     }));
     $("#crash-tab").click()
