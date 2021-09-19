@@ -114,10 +114,23 @@ function onMarkerUnhover(e) {
     currentHover = null;
 }
 
+function formatRecordLink(format, values) {
+    values = [...values]
+    return format.replaceAll('{}', _ => values.shift())
+}
+
 function dispatchDetails(properties) {
     mergeMaps(properties, fullData.get(properties.get("id")))
-    let url_params = properties.get('id').split('-')
-    properties.set('url', `https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails?stateCase=${url_params[2]}&caseYear=${url_params[0]}&state=${url_params[1]}&format=xml`)
+    let record_links = metadata.record_links
+    let id_splitter = record_links.id_splitter
+    let url_params = id_splitter ? properties.get('id').split(id_splitter) : [properties.get('id')]
+    properties.set('url', formatRecordLink(record_links.crash_format, url_params))
+    if (record_links.person_format) {
+        properties.set('person_url', formatRecordLink(record_links.person_format, url_params))
+    }
+    if (record_links.vehicle_format) {
+        properties.set('vehicle_url', formatRecordLink(record_links.vehicle_format, url_params))
+    }
     window.dispatchEvent(new CustomEvent("crash-data", {
         detail: Object.fromEntries(properties),
     }));

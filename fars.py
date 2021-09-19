@@ -1,7 +1,7 @@
 import math
 from collections import namedtuple, defaultdict
 
-from web_data import ColumnNames, RowDataGetter, DataDescription
+from web_data import ColumnNames, RowDataGetter, DataDescription, Links
 
 PersonType = namedtuple('PersonType', ['name', 'category'])
 InjuryType = namedtuple('InjuryType', ['name', 'category', 'number'])
@@ -10,8 +10,11 @@ FARS_DATA_DESCRIPTION = DataDescription(
     title='Traffic fatalities in the United States',
     source='United States National Highway Traffic Safety Administration, '
            '<a href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars">Fatality Analysis '
-           'Reporting System</a>. 2020 data will be released in December 2021.',
+           'Reporting System</a>. Tracks crashes with fatalities only. 2020 data will be released in December 2021.',
     state='fars',
+    record_links=Links(id_splitter='-',
+                       crash_format='https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails'
+                                    '?caseYear={}&state={}&stateCase={}&format=xml')
 )
 
 COLUMN_NAMES = ColumnNames(latitude='LATITUDE', longitude='LONGITUD', year='CASEYEAR')

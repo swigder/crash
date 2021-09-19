@@ -17,10 +17,19 @@ class ColumnNames:
 
 
 @dataclass
+class Links:
+    crash_format: str
+    person_format: str = None
+    vehicle_format: str = None
+    id_splitter: str = None
+
+
+@dataclass
 class DataDescription:
     title: str
     source: str
     state: str
+    record_links: Links
 
 
 class RowDataGetter:
@@ -100,6 +109,12 @@ class WebDataGenerator:
             'min_year': int(df[self.column_names.year].min()),
             'max_year': int(df[self.column_names.year].max()),
             'filenames': filenames,
+            'record_links': {
+                'id_splitter': self.data_description.record_links.id_splitter,
+                'crash_format': self.data_description.record_links.crash_format,
+                'person_format': self.data_description.record_links.person_format,
+                'vehicle_format': self.data_description.record_links.vehicle_format,
+            }
         }
 
         with open(f'{WEB_BASE_DIR}/{self.data_dir}/file-metadata.json', 'w') as outfile:

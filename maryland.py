@@ -6,7 +6,7 @@ import pandas as pd
 
 from api_data import ApiDataInterface, Table, Tables
 from constants import InjuryType, PersonType, UNKNOWN, CrashCategory
-from web_data import ColumnNames, WebDataGenerator, RowDataGetter, DataDescription
+from web_data import ColumnNames, WebDataGenerator, RowDataGetter, DataDescription, Links
 
 DATE_OF_BIRTH_COLUMN = 'DATE_OF_BIRTH'
 INJURY_SEVERITY_COLUMN = 'INJ_SEVER_CODE'
@@ -37,6 +37,9 @@ MARYLAND_DATA_DESCRIPTION = DataDescription(
     source='Maryland State Police <a href="https://opendata.maryland.gov/Public-Safety/Maryland-Statewide-Vehicle'
            '-Crashes/65du-s3qu">Maryland Statewide Vehicle Crashes</a>. Data is updated quarterly.',
     state='maryland',
+    record_links=Links(crash_format='https://opendata.maryland.gov/resource/65du-s3qu.xml?report_no={}',
+                       person_format='https://opendata.maryland.gov/resource/py4c-dicf.xml?report_no={}',
+                       vehicle_format='https://opendata.maryland.gov/resource/mhft-5t5y.xml?report_no={}')
 )
 
 INJURY_CODE_TO_INJURY = {
@@ -139,7 +142,7 @@ class MarylandRowDataGetter(RowDataGetter):
     def num_fatalities(row):
         num_fatalities = 0
         for p in row['Person']:
-            if INJURY_CODE_TO_INJURY[p['INJ_SEVER_CODE']] == InjuryType.FATALITY:
+            if injury_type(p) == InjuryType.FATALITY:
                 num_fatalities += 1
         return num_fatalities
 
@@ -147,14 +150,11 @@ class MarylandRowDataGetter(RowDataGetter):
     def injuries(row):
         injuries = defaultdict(list)
         for p in row['Person']:
-            injury_type = INJURY_CODE_TO_INJURY[p[INJURY_SEVERITY_COLUMN]]
-            person_type = PERSON_TYPE_CODE_TO_PERSON[p[PERSON_TYPE_COLUMN]].value.description
-            person_age = age(p[DATE_OF_BIRTH_COLUMN], row['ACC_DATE'])
             info = {
-                'person': person_type,
-                'age': person_age,
+                'person': person_type(p).value.description,
+                'age': age(p[DATE_OF_BIRTH_COLUMN], row['ACC_DATE']),
             }
-            injuries[injury_type.value.category.value].append(info)
+            injuries[injury_type(p).value.category.value].append(info)
         return injuries
 
 

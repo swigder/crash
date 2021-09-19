@@ -70,6 +70,9 @@ class FarsApiDataInterface(ApiDataInterface):
     def convert_to_df(self):
         pass
 
+    def merged_data_file(self, year):
+        return f'{self.data_dir()}/df-{year}.pkl'
+
     def convert_data_types(self, df, dataset: Table = None):
         for col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='ignore')

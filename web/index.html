@@ -105,7 +105,7 @@
                             <table class="table">
                                 <tbody>
                                 <tr>
-                                    <th class="has-text-right">Fatal crashes</th>
+                                    <th class="has-text-right">Crashes</th>
                                     <td x-text="detail.crash_count"></td>
                                 </tr>
                                 <tr>
@@ -123,7 +123,15 @@
                                     <tbody>
                                     <tr>
                                         <th class="has-text-right">Case</th>
-                                        <td><a x-bind:href="detail.url" x-text="detail.id" target="_blank"></a></td>
+                                        <td>
+                                            <a x-bind:href="detail.url" x-text="detail.id" target="_blank"></a>
+                                            <template x-if="detail.person_url">
+                                                <a x-bind:href="detail.person_url" target="_blank">Person</a>
+                                            </template>
+                                            <template x-if="detail.vehicle_url">
+                                                <a x-bind:href="detail.vehicle_url" target="_blank">Vehicle</a>
+                                            </template>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th class="has-text-right">Year</th>
