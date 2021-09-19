@@ -5,15 +5,19 @@ from datetime import datetime
 import pandas as pd
 
 from api_data import ApiDataInterface, Table, Tables
-from constants import InjuryType, PersonType, UNKNOWN
+from constants import InjuryType, PersonType, UNKNOWN, CrashCategory
 from web_data import ColumnNames, WebDataGenerator, RowDataGetter, DataDescription
+
+DATE_OF_BIRTH_COLUMN = 'DATE_OF_BIRTH'
+INJURY_SEVERITY_COLUMN = 'INJ_SEVER_CODE'
+PERSON_TYPE_COLUMN = 'PERSON_TYPE'
 
 WEB_BASE_DIR = 'web'
 DATA_BASE_DIR = 'data/maryland'
 
 HARM = {
-    'Pedestrian': 'ped',
-    'Bicycle': 'bike',
+    'Pedestrian': CrashCategory.PEDESTRIAN,
+    'Bicycle': CrashCategory.BICYCLE,
 }
 
 MARYLAND_TABLES = Tables(
@@ -22,7 +26,7 @@ MARYLAND_TABLES = Tables(
                 columns=['REPORT_TYPE', 'HARM_EVENT_DESC1', 'HARM_EVENT_DESC2', 'LATITUDE', 'LONGITUDE',
                          'YEAR', 'ACC_DATE']),
     person=Table(name='Person',
-                 columns=['PERSON_TYPE', 'INJ_SEVER_CODE', 'DATE_OF_BIRTH']),
+                 columns=[PERSON_TYPE_COLUMN, INJURY_SEVERITY_COLUMN, DATE_OF_BIRTH_COLUMN]),
     vehicle=Table(name='Vehicle', columns=[]),
 )
 
@@ -50,6 +54,14 @@ PERSON_TYPE_CODE_TO_PERSON = {
 }
 
 
+def injury_type(person):
+    return INJURY_CODE_TO_INJURY.get(person[INJURY_SEVERITY_COLUMN])
+
+
+def person_type(person):
+    return PERSON_TYPE_CODE_TO_PERSON.get(person[PERSON_TYPE_COLUMN])
+
+
 class MarylandApiDataInterface(ApiDataInterface):
     def __init__(self):
         super(MarylandApiDataInterface, self).__init__(state='maryland', tables=MARYLAND_TABLES)
@@ -74,7 +86,7 @@ class MarylandApiDataInterface(ApiDataInterface):
         if dataset.name == 'Crash':
             df['ACC_DATE'] = df['ACC_DATE'].astype(str)
         if dataset.name == 'Person':
-            df['DATE_OF_BIRTH'] = df['DATE_OF_BIRTH'].astype(str)
+            df[DATE_OF_BIRTH_COLUMN] = df[DATE_OF_BIRTH_COLUMN].astype(str)
 
 
 def safe_int(maybe_nan):
@@ -112,7 +124,12 @@ class MarylandRowDataGetter(RowDataGetter):
 
     @staticmethod
     def category(row):
-        return HARM.get(row['HARM_EVENT_DESC1'], 'car')
+        desc = row['HARM_EVENT_DESC1']
+        if desc in HARM:
+            return HARM[desc].value
+        injuries = map(lambda p: (injury_type(p), person_type(p)), row['Person'])
+        max_injury_person = max(injuries, key=lambda i: (i[0].value.severity, i[1].value.vulnerability))
+        return max_injury_person[1].value.category.value
 
     @staticmethod
     def num_vehicles(row):
@@ -130,9 +147,9 @@ class MarylandRowDataGetter(RowDataGetter):
     def injuries(row):
         injuries = defaultdict(list)
         for p in row['Person']:
-            injury_type = INJURY_CODE_TO_INJURY[p['INJ_SEVER_CODE']]
-            person_type = PERSON_TYPE_CODE_TO_PERSON[p['PERSON_TYPE']].value.description
-            person_age = age(p['DATE_OF_BIRTH'], row['ACC_DATE'])
+            injury_type = INJURY_CODE_TO_INJURY[p[INJURY_SEVERITY_COLUMN]]
+            person_type = PERSON_TYPE_CODE_TO_PERSON[p[PERSON_TYPE_COLUMN]].value.description
+            person_age = age(p[DATE_OF_BIRTH_COLUMN], row['ACC_DATE'])
             info = {
                 'person': person_type,
                 'age': person_age,
