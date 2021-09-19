@@ -132,7 +132,7 @@
                                     <tr>
                                         <th class="has-text-right">Fatalities</th>
                                         <td>
-                                            <template x-for="fatality in detail.fatalities" :key="fatality">
+                                            <template x-if="detail.fatalities" x-for="fatality in detail.fatalities" :key="fatality">
                                                 <dl><span x-text="fatality.person"></span>, age <span x-text="fatality.age"></span>
                                                 </dl>
                                             </template>

@@ -74,18 +74,6 @@ def get_category(people):
     return PER_TYPE_PRIORITIES[max_category] if max_category > -1 else 'other'
 
 
-def get_injuries(people):
-    injuries = defaultdict(list)
-    for p in people:
-        injury_type = get_injury_type(p)
-        person_type = get_person_type(p).name
-        info = {'person': person_type, 'age': p['AGE'] if 'AGE' in p and p['AGE'] < 900 else 'unknown'}
-        if len(INJURY_TYPE_GROUPS[injury_type.category]) > 1:
-            info['severity'] = injury_type.name
-        injuries[injury_type.category].append(info)
-    return injuries
-
-
 def get_num_fatalities(people):
     num_fatalities = 0
     for p in people:
@@ -113,4 +101,12 @@ class FarsRowDataGetter(RowDataGetter):
 
     @staticmethod
     def injuries(row):
-        return get_injuries(row['Person'])
+        injuries = defaultdict(list)
+        for p in row['Person']:
+            injury_type = get_injury_type(p)
+            person_type = get_person_type(p).name
+            info = {'person': person_type, 'age': p['AGE'] if 'AGE' in p and p['AGE'] < 900 else 'unknown'}
+            if len(INJURY_TYPE_GROUPS[injury_type.category]) > 1:
+                info['severity'] = injury_type.name
+            injuries[injury_type.category].append(info)
+        return injuries

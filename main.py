@@ -4,10 +4,10 @@ import json
 import pandas as pd
 import requests
 
-from api_data import ApiDataInterface
+from api_data import ApiDataInterface, Table, Tables
 from fars import COLUMN_NAMES, FARS_DATA_DESCRIPTION
 from fars import FarsRowDataGetter
-from web_data import ColumnNames, WebDataGenerator
+from web_data import WebDataGenerator
 
 BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
 CRASH_API = f'{BASE_URL}/crashes'
@@ -40,23 +40,22 @@ def query_fars_api(api, params, force_cache_update=False):
     return response
 
 
-KEY_COLUMNS = ['CASEYEAR', 'STATE', 'ST_CASE']
-
-DATASETS = {
-    'Accident': ['LATITUDE', 'LONGITUD', 'FATALS'],
-    'Person': ['PER_TYP', 'PER_TYPNAME', 'INJ_SEV', 'INJ_SEVNAME', 'AGE'],
-    'Vehicle': [],
-}
+FARS_TABLES = Tables(
+    key_columns=['CASEYEAR', 'STATE', 'ST_CASE'],
+    crash=Table(name='Accident', columns=['LATITUDE', 'LONGITUD', 'FATALS']),
+    person=Table(name='Person', columns=['PER_TYP', 'PER_TYPNAME', 'INJ_SEV', 'INJ_SEVNAME', 'AGE']),
+    vehicle=Table(name='Vehicle', columns=[]),
+)
 
 
 def refresh_data_from_server(year):
-    for dataset, _ in DATASETS.items():
-        query_fars_api(api=f'{DATA_API}/GetFARSData', params={'dataset': dataset, 'caseYear': year},
+    for dataset, _ in DATASETS:
+        query_fars_api(api=f'{DATA_API}/GetFARSData', params={'dataset': dataset.name, 'caseYear': year},
                        force_cache_update=True)
 
 
 def convert_to_df(year):
-    for dataset, fields in DATASETS.items():
+    for dataset, fields in DATASETS:
         response = query_fars_api(api=f'{DATA_API}/GetFARSData',
                                   params={'dataset': dataset, 'caseYear': year})
         df = pd.DataFrame(response['Results'][0])
@@ -64,48 +63,16 @@ def convert_to_df(year):
         df.to_pickle(f'data/{dataset}-{year}.pkl')
 
 
-def filter_data(year):
-    for dataset, fields in DATASETS.items():
-        df = pd.read_pickle(f'data/{dataset}-{year}.pkl')
-        for col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='ignore')
-        df = df[KEY_COLUMNS + fields]
-        df.to_pickle(f'data/{dataset}-{year}-filtered.pkl')
-
-
-def merge_data(year):
-    crash_df = pd.read_pickle(f'data/Accident-{year}-filtered.pkl')
-    crash_df.columns = [c.upper() for c in crash_df.columns]
-    crash_df = crash_df.set_index(KEY_COLUMNS, drop=True)
-
-    person_df = pd.read_pickle(f'data/Person-{year}-filtered.pkl')
-    person_df = person_df.groupby(KEY_COLUMNS)[person_df.columns.difference(KEY_COLUMNS)].apply(
-        lambda x: x.to_dict('r'))
-
-    vehicle_df = pd.read_pickle(f'data/Vehicle-{year}-filtered.pkl')
-    vehicle_df = vehicle_df.groupby(KEY_COLUMNS).size()
-
-    df = crash_df. \
-        merge(person_df.rename('Person'), how='left', left_index=True, right_index=True). \
-        merge(vehicle_df.rename('Vehicle'), how='left', left_index=True, right_index=True)
-
-    df.to_pickle(f'data/df-{year}.pkl')
-
-
 class FarsApiDataInterface(ApiDataInterface):
+    def __init__(self):
+        super(FarsApiDataInterface, self).__init__(state='fars', tables=FARS_TABLES)
+
     def convert_to_df(self):
         pass
 
-    def filter_data(self):
-        pass
-
-    def read_data(self):
-        all_pickles = glob.glob('data/df-*.pkl')
-        dfs = []
-        for filename_geojson in all_pickles:
-            df = pd.read_pickle(filename_geojson)
-            dfs.append(df)
-        return pd.concat(dfs, axis=0)
+    def convert_data_types(self, df, dataset: Table = None):
+        for col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='ignore')
 
 
 def generate_web_data():

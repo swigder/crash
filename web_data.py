@@ -34,11 +34,11 @@ class RowDataGetter:
 
     @staticmethod
     def num_fatalities(row):
-        return -1
+        pass
 
     @staticmethod
     def num_vehicles(row):
-        return -1
+        pass
 
     @staticmethod
     def injuries(row):
