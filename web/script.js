@@ -1,19 +1,47 @@
 const urlParams = new URLSearchParams(window.location.search);
-const dataset = urlParams.has('dataset') ? urlParams.get('dataset') : 'fars'
+let dataset = urlParams.get('dataset')
 
-let metadata = {}
+let sourceOptions = {}
 $.ajax({
-    url: `data/${dataset}/file-metadata.json`,
+    url: `data/sources.json`,
     async: false,
     dataType: "json",
     success: data => {
-        metadata = data;
-        metadata.filenames = new Set(metadata.filenames)
-        window.dispatchEvent(new CustomEvent("metadata-load", {
-            detail: metadata
-        }))
+        sourceOptions = data.sources;
+        if (!dataset || !sourceOptions.some(e => e.code === dataset)) {
+            dataset = data.default
+        }
+        window.dispatchEvent(new CustomEvent("sources-load"))
     }
 })
+
+function sourceInfo() {
+    return {
+        options: sourceOptions,
+        selected: sourceOptions.find(s => s.code === dataset),
+    }
+}
+
+let metadata = {}
+
+function loadMetadata() {
+    $.ajax({
+        url: `data/${dataset}/file-metadata.json`,
+        async: false,
+        dataType: "json",
+        success: data => {
+            metadata = data;
+            metadata.filenames = new Set(metadata.filenames)
+            window.dispatchEvent(new CustomEvent("metadata-load"))
+        }
+    })
+}
+
+loadMetadata();
+
+function metadataInfo() {
+    return metadata;
+}
 
 // TODO: Check that retina display tiles do not cause problems on non-retina devices (`@2x` below).
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3dpZ2RlciIsImEiOiJja29hbnI2bmQwMm0zMm91aHhlNHlhOHF2In0.FaLm4CYTTue7x4-NWm8p5g';
@@ -217,6 +245,20 @@ function getNewData() {
     }
 }
 
+function clearSources(dataset) {
+    let filesToRemove = new Set()
+    loadedFiles.forEach(function (file) {
+        if (file.startsWith(`data/${dataset}`)) {
+            filesToRemove.add(file)
+        }
+    });
+    filesToRemove.forEach(function (file) {
+        map.removeLayer(file)
+        map.removeSource(file)
+        loadedFiles.delete(file)
+    })
+}
+
 function getCounts() {
     let crash_count = 0
     let fatality_count = 0
@@ -236,7 +278,7 @@ function setFilter(layer) {
     map.setFilter(layer, ['in', ['get', 'harm'], ['literal', Array.from(filters["harm"])]]);
 }
 
-$("button").on('click', (event) => {
+$(".filter-button").on('click', (event) => {
     let button = $(event.currentTarget)
     button.toggleClass('is-selected');
     let filter = button.attr("data-filter-type")
@@ -251,3 +293,17 @@ $("button").on('click', (event) => {
     });
     updateCount()
 });
+
+let dropdown = document.querySelector('.dropdown');
+dropdown.addEventListener('click', function (event) {
+    event.stopPropagation();
+    dropdown.classList.toggle('is-active');
+});
+
+function updateSource(element) {
+    clearSources(dataset)
+    dataset = element.getAttribute('data-source')
+    window.dispatchEvent(new CustomEvent("sources-load"))
+    loadMetadata()
+    getNewData()
+}

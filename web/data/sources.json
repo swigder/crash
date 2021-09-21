@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "code": "fars",
+      "description": "National (fatal only)"
+    },
+    {
+      "code": "maryland",
+      "description": "Maryland"
+    }
+  ],
+  "default": "fars"
+}
