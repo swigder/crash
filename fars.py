@@ -86,8 +86,7 @@ def get_num_fatalities(people):
 
 
 class FarsRowDataGetter(RowDataGetter):
-    @staticmethod
-    def item_id(row):
+    def item_id(self, row):
         return f'{row["CASEYEAR"]}-{row["STATE"]}-{row["ST_CASE"]}'
 
     @staticmethod

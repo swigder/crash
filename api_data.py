@@ -1,34 +1,46 @@
 import glob
+import os
 from dataclasses import dataclass
 
 import pandas as pd
+import requests
 
 
 @dataclass
 class Table:
     name: str
     columns: list
+    url: str = None
 
 
 @dataclass
 class Tables:
     key_columns: list[str]
     crash: Table
-    person: Table
-    vehicle: Table
+    person: Table = None
+    vehicle: Table = None
+    detail: Table = None
 
     def get_tables(self):
-        return [self.crash, self.person, self.vehicle]
+        return [t for t in [self.crash, self.person, self.vehicle, self.detail] if t]
+
+
+@dataclass
+class DataSources:
+    crash: str
 
 
 class ApiDataInterface:
-    def __init__(self, state, tables: Tables):
-        self.state = state
+    def __init__(self, entity, tables: Tables):
+        self.entity = entity
         self.tables = tables
         self.key_columns = self.tables.key_columns
 
     def data_dir(self):
-        return f'data.nosync/{self.state}'
+        return f'data.nosync/{self.entity}'
+
+    def downloaded_data_file(self, dataset_name):
+        return f'{self.data_dir()}/{dataset_name.lower()}.csv'
 
     def unfiltered_data_file(self, dataset_name, year):
         return f'{self.data_dir()}/{dataset_name}-{year}.pkl'
@@ -39,8 +51,30 @@ class ApiDataInterface:
     def merged_data_file(self, year):
         return f'{self.data_dir()}/data-{year}.pkl'
 
+    def download_data(self, refresh=False):
+        if not os.path.exists(self.data_dir()):
+            os.makedirs(self.data_dir())
+        for table in self.tables.get_tables():
+            if not table.url:
+                continue
+            output_path = self.downloaded_data_file(table.name)
+            if not refresh and os.path.exists(output_path):
+                continue
+            response = requests.get(table.url)
+            response.encoding = 'utf-8-sig'
+            with open(output_path, 'w') as outfile:
+                outfile.write(response.text)
+
     def convert_to_df(self):
-        pass
+        for table in self.tables.get_tables():
+            df = pd.read_csv(self.downloaded_data_file(table.name))
+            df.to_pickle(self.unfiltered_data_file(table.name, year='all'))
+
+    def convert_data_types(self, df, dataset: Table = None) -> None:
+        return
+
+    def add_columns(self, df, dataset: Table) -> None:
+        return df
 
     def filter_columns(self, df, dataset: Table):
         return df[self.key_columns + dataset.columns]
@@ -48,37 +82,35 @@ class ApiDataInterface:
     def filter_rows(self, df, dataset: Table = None):
         return df
 
-    def convert_data_types(self, df, dataset: Table = None) -> None:
-        return
+    def filter_data(self, year):
+        for dataset in self.tables.get_tables():
+            dataset_name = dataset.name
+            df = pd.read_pickle(self.unfiltered_data_file(dataset_name, year))
+            self.convert_data_types(df, dataset)
+            df = self.add_columns(df, dataset)
+            df = self.filter_columns(df, dataset)
+            df = self.filter_rows(df, dataset)
+            df.to_pickle(self.filtered_data_file(dataset_name, year))
 
     def merge_data(self, year):
         crash_df = pd.read_pickle(self.filtered_data_file(self.tables.crash.name, year))
         crash_df.columns = [c.upper() for c in crash_df.columns]
         crash_df = crash_df.set_index(self.key_columns, drop=True)
 
-        person_df = pd.read_pickle(self.filtered_data_file(self.tables.person.name, year))
-        person_df = person_df.groupby(self.key_columns)[person_df.columns.difference(self.key_columns)].apply(
-            lambda x: x.to_dict('r'))
+        merged_df = crash_df
 
-        vehicle_df = pd.read_pickle(self.filtered_data_file(self.tables.vehicle.name, year))
-        vehicle_df = vehicle_df.groupby(self.key_columns).size()
+        for other_table in self.tables.get_tables():
+            if not other_table or other_table.name == 'Crash':
+                continue
+            other_df = pd.read_pickle(self.filtered_data_file(other_table.name, year))
+            other_df = other_df.groupby(self.key_columns)[other_df.columns.difference(self.key_columns)].apply(lambda x: x.to_dict('r'))
+            merged_df = merged_df.merge(other_df.rename(other_table.name), how='left', left_index=True, right_index=True)
 
-        df = crash_df. \
-            merge(person_df.rename('Person'), how='left', left_index=True, right_index=True). \
-            merge(vehicle_df.rename('Vehicle'), how='left', left_index=True, right_index=True)
+        merged_df.to_pickle(self.merged_data_file(year))
 
-        df.to_pickle(self.merged_data_file(year))
-
-    def filter_data(self, year):
-        for dataset in self.tables.get_tables():
-            dataset_name = dataset.name
-            df = pd.read_pickle(self.unfiltered_data_file(dataset_name, year))
-            self.convert_data_types(df, dataset)
-            df = self.filter_columns(df, dataset)
-            df = self.filter_rows(df, dataset)
-            df.to_pickle(self.filtered_data_file(dataset_name, year))
-
-    def process_data(self, year):
+    def process_data(self, year='all'):
+        print('Downloading data...')
+        self.download_data(refresh=False)
         print('Converting to df...')
         self.convert_to_df()
         print('Filtering...')

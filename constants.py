@@ -37,9 +37,11 @@ class Person:
 
 
 class PersonType(Enum):
+    BICYCLIST = Person(vulnerability=75, description='Bicyclist', category=CrashCategory.BICYCLE)
     DRIVER = Person(vulnerability=0, description='Driver', category=CrashCategory.MOTOR_VEHICLE)
     OCCUPANT = Person(vulnerability=50, description='Occupant', category=CrashCategory.MOTOR_VEHICLE)
     PEDESTRIAN = Person(vulnerability=100, description='Pedestrian', category=CrashCategory.PEDESTRIAN)
+    OTHER = Person(vulnerability=-5, description='Other', category=CrashCategory.OTHER)
 
 
 UNKNOWN = 'unknown'

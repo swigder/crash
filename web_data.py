@@ -1,5 +1,6 @@
 import json
 import math
+import os
 
 import geojson
 import pandas as pd
@@ -14,6 +15,7 @@ class ColumnNames:
     latitude: str = 'LATITUDE'
     longitude: str = 'LONGITUDE'
     year: str = 'YEAR'
+    id: str = None
 
 
 @dataclass
@@ -33,9 +35,11 @@ class DataDescription:
 
 
 class RowDataGetter:
-    @staticmethod
-    def item_id(row):
-        pass
+    def __init__(self, column_names: ColumnNames = None):
+        self.column_names = column_names
+
+    def item_id(self, row):
+        return row[self.column_names.id] if self.column_names.id else None
 
     @staticmethod
     def category(row):
@@ -60,6 +64,9 @@ class WebDataGenerator:
         self.row_data_getter = row_data_getter
         self.data_description = data_description
         self.data_dir = f'data/{data_description.state}'
+        self.web_data_dir = f'{WEB_BASE_DIR}/{self.data_dir}'
+        if not os.path.exists(self.web_data_dir):
+            os.makedirs(self.web_data_dir)
 
     def iterate_and_save(self, df, latlong_interval: int = 1):
         grouped = df.groupby(
@@ -73,8 +80,8 @@ class WebDataGenerator:
             geojson_items = []
             items_details = {}
             for index, row in groupdf.iterrows():
-                item_id = self.row_data_getter.item_id(row)
-                year = row[self.column_names.year]
+                item_id = str(self.row_data_getter.item_id(row))
+                year = int(row[self.column_names.year])
                 properties = {
                     'id': item_id,
                     'year': year,
@@ -117,6 +124,6 @@ class WebDataGenerator:
             }
         }
 
-        with open(f'{WEB_BASE_DIR}/{self.data_dir}/file-metadata.json', 'w') as outfile:
+        with open(f'{self.web_data_dir}/file-metadata.json', 'w') as outfile:
             json.dump(metadata, outfile)
 

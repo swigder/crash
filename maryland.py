@@ -30,7 +30,7 @@ MARYLAND_TABLES = Tables(
     vehicle=Table(name='Vehicle', columns=[]),
 )
 
-COLUMN_NAMES = ColumnNames(latitude='LATITUDE', longitude='LONGITUDE', year='YEAR')
+COLUMN_NAMES = ColumnNames(latitude='LATITUDE', longitude='LONGITUDE', year='YEAR', id='REPORT_NO')
 
 MARYLAND_DATA_DESCRIPTION = DataDescription(
     title='Crashes with Injuries or Fatalities in Maryland',
@@ -67,7 +67,7 @@ def person_type(person):
 
 class MarylandApiDataInterface(ApiDataInterface):
     def __init__(self):
-        super(MarylandApiDataInterface, self).__init__(state='maryland', tables=MARYLAND_TABLES)
+        super(MarylandApiDataInterface, self).__init__(entity='maryland', tables=MARYLAND_TABLES)
 
     def convert_to_df(self):
         datasets_to_filenames = {
@@ -122,10 +122,6 @@ def age(birth_date_str: str, crash_date_str: str):
 
 class MarylandRowDataGetter(RowDataGetter):
     @staticmethod
-    def item_id(row):
-        return row['REPORT_NO']
-
-    @staticmethod
     def category(row):
         desc = row['HARM_EVENT_DESC1']
         if desc in HARM:
@@ -163,10 +159,8 @@ if __name__ == '__main__':
     # data_interface.process_data(year='all')
     df = data_interface.read_data()
 
-    person_df = pd.read_pickle(data_interface.filtered_data_file(data_interface.tables.person.name, 'all'))
-
     print('Generating web data...')
-    web_data_generator = WebDataGenerator(row_data_getter=MarylandRowDataGetter(),
+    web_data_generator = WebDataGenerator(row_data_getter=MarylandRowDataGetter(column_names=COLUMN_NAMES),
                                           column_names=COLUMN_NAMES,
                                           data_description=MARYLAND_DATA_DESCRIPTION)
     web_data_generator.iterate_and_save(df, latlong_interval=2)

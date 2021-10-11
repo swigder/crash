@@ -65,7 +65,7 @@ def convert_to_df(year):
 
 class FarsApiDataInterface(ApiDataInterface):
     def __init__(self):
-        super(FarsApiDataInterface, self).__init__(state='fars', tables=FARS_TABLES)
+        super(FarsApiDataInterface, self).__init__(entity='fars', tables=FARS_TABLES)
 
     def convert_to_df(self):
         pass
