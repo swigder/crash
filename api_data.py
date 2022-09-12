@@ -86,6 +86,7 @@ class ApiDataInterface:
         for dataset in self.tables.get_tables():
             dataset_name = dataset.name
             df = pd.read_pickle(self.unfiltered_data_file(dataset_name, year))
+            df.columns = [c.upper() for c in df.columns]
             self.convert_data_types(df, dataset)
             df = self.add_columns(df, dataset)
             df = self.filter_columns(df, dataset)

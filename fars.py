@@ -1,10 +1,25 @@
 import math
+import os
 from collections import namedtuple, defaultdict
 
-from web_data import ColumnNames, RowDataGetter, DataDescription, Links
+import pandas as pd
+import requests
+
+from api_data import ApiDataInterface, Tables, Table
+from web_data import ColumnNames, RowDataGetter, DataDescription, Links, WebDataGenerator
 
 PersonType = namedtuple('PersonType', ['name', 'category'])
 InjuryType = namedtuple('InjuryType', ['name', 'category', 'number'])
+
+BASE_URL = 'https://crashviewer.nhtsa.dot.gov/CrashAPI'
+DATA_API = f'{BASE_URL}/FARSData'
+
+FARS_TABLES = Tables(
+    key_columns=['CASEYEAR', 'STATE', 'ST_CASE'],
+    crash=Table(name='Accident', columns=['LATITUDE', 'LONGITUD', 'FATALS']),
+    person=Table(name='Person', columns=['PER_TYP', 'PER_TYPNAME', 'INJ_SEV', 'INJ_SEVNAME', 'AGE']),
+    vehicle=Table(name='Vehicle', columns=[]),
+)
 
 FARS_DATA_DESCRIPTION = DataDescription(
     title='Traffic fatalities in the United States',
@@ -112,3 +127,51 @@ class FarsRowDataGetter(RowDataGetter):
                 info['severity'] = injury_type.name
             injuries[injury_type.category].append(info)
         return injuries
+
+
+class FarsApiDataInterface(ApiDataInterface):
+    def __init__(self):
+        super(FarsApiDataInterface, self).__init__(entity='fars', tables=FARS_TABLES)
+        self.years = range(2020, 2021)
+
+    def download_data(self, refresh=False):
+        if not os.path.exists(self.data_dir()):
+            os.makedirs(self.data_dir())
+        for table in self.tables.get_tables():
+            for year in self.years:
+                output_path = self.downloaded_data_file(table.name, year)
+                if not refresh and os.path.exists(output_path):
+                    continue
+                params = {'dataset': table.name, 'State': '*', 'FromYear': year, 'ToYear': year}
+                response = requests.get(DATA_API, params)
+                response.encoding = 'utf-8-sig'
+                with open(output_path, 'w') as outfile:
+                    outfile.write(response.text)
+
+    def convert_to_df(self):
+        for table in self.tables.get_tables():
+            for year in self.years:
+                df = pd.read_csv(self.downloaded_data_file(table.name, year))
+                df.to_pickle(self.unfiltered_data_file(table.name, year))
+
+    def downloaded_data_file(self, dataset_name, year):
+        return f'{self.data_dir()}/{dataset_name.lower()}-{year}.csv'
+
+    def merged_data_file(self, year):
+        return f'{self.data_dir()}/df-{year}.pkl'
+
+    def convert_data_types(self, df, dataset: Table = None):
+        for col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='ignore')
+
+
+if __name__ == '__main__':
+    data_interface = FarsApiDataInterface()
+    data_interface.process_data(year=2020)
+    df = data_interface.read_data()
+
+    print('Generating web data...')
+    web_data_generator = WebDataGenerator(row_data_getter=FarsRowDataGetter(column_names=COLUMN_NAMES),
+                                          column_names=COLUMN_NAMES,
+                                          data_description=FARS_DATA_DESCRIPTION)
+    web_data_generator.iterate_and_save(df, latlong_interval=2)

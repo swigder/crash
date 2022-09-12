@@ -26,8 +26,8 @@ DC_TABLES = Tables(
 DC_DATA_DESCRIPTION = DataDescription(
     title='Crashes with Injuries or Fatalities in the District of Columbia',
     source='District Department of Transportation <a '
-           'href="https://opendata.dc.gov/datasets/DCGIS::crashes-in-dc/about">Crashes in DC</a>. Data is updated '
-           'daily.',
+           'href="https://opendata.dc.gov/datasets/DCGIS::crashes-in-dc/about">Crashes in DC</a>. Older data is '
+           'incomplete.',
     state='dc',
     record_links=Links(
         crash_format='https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer'
