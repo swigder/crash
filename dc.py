@@ -43,6 +43,7 @@ PERSON_TYPE_TO_PERSON = {
     'Driver': PersonType.DRIVER,
     'Electric M': PersonType.OTHER,
     'Occupant o': PersonType.OCCUPANT,
+    'Other': PersonType.OTHER,
     'Passenger': PersonType.OCCUPANT,
     'Pedestrian': PersonType.PEDESTRIAN,
     'Streetcar': PersonType.OTHER,
